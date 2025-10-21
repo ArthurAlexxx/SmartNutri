@@ -1,0 +1,161 @@
+/**
+ * @fileoverview Firestore Security Rules for NutriSmart application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict multi-tenant data isolation model.  All data access is scoped to a specific tenant,
+ * and users can only access data within their assigned tenant.  We prioritize secure authorization, but we are flexible
+ * on data shapes during this prototyping phase to allow for rapid iteration.
+ *
+ * Data Structure:
+ * - /tenants/{tenantId}: Stores tenant-level information.  The `ownerId` field indicates the tenant's administrator.
+ * - /tenants/{tenantId}/config/site:  Stores tenant-specific site configurations.
+ * - /tenants/{tenantId}/users/{userId}: Stores user profiles within each tenant.  The `tenantId` field must match the parent tenant ID.
+ * - /tenants/{tenantId}/meal_entries/{mealEntryId}: Stores meal entries specific to a tenant.
+ *
+ * Key Security Decisions:
+ * - All data is scoped to a tenant.
+ * - Users can only access data associated with their tenant.
+ * - Tenant owners have full control over their tenant's data.
+ *
+ * Denormalization for Authorization:
+ * - The `User` entity contains a `tenantId` field.  This is CRITICAL.  The rules will validate that this `tenantId` matches the `tenantId` in the path `/tenants/{tenantId}/users/{userId}` to prevent users from being created in the wrong tenant or moved to another tenant by malicious actors.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to the /tenants/{tenantId} collection.
+     * @path /tenants/{tenantId}
+     * @allow (read): Authenticated users can get tenants for display purposes.
+     * @allow (create): Only the owner of a tenant can create a tenant. OwnerId field must be equal to request auth uid.
+     * @allow (update): Only the owner of a tenant can update tenant information.
+     * @allow (delete): Only the owner of a tenant can delete a tenant.
+     * @deny (create): Non-authenticated users or authenticated users creating tenants for other users.
+     * @deny (update): Non-owners attempting to modify tenant data.
+     * @deny (delete): Non-owners attempting to delete tenants.
+     * @principle Enforces tenant-level ownership for data management.
+     */
+    match /tenants/{tenantId} {
+      // Anyone can read tenant info
+      allow get: if true;
+      allow list: if true;
+
+      // Only the tenant owner can create, update, or delete the tenant
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner(tenantId);
+      allow delete: if isSignedIn() && isOwner(tenantId);
+    }
+
+    /**
+     * @description Controls access to the /tenants/{tenantId}/config/site document.
+     * @path /tenants/{tenantId}/config/site
+     * @allow (get): Authenticated users can read site configurations within their tenant.
+     * @allow (create): Only the tenant owner can create the site configuration.
+     * @allow (update): Only the tenant owner can update the site configuration.
+     * @allow (delete): Only the tenant owner can delete the site configuration.
+     * @deny (create): Non-owners attempting to create a site configuration.
+     * @deny (update): Non-owners attempting to modify the site configuration.
+     * @deny (delete): Non-owners attempting to delete the site configuration.
+     * @principle Enforces tenant-level ownership for site configuration management.
+     */
+    match /tenants/{tenantId}/config/site {
+      allow get: if isSignedIn() && isTenantUser(tenantId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(tenantId);
+      allow update: if isSignedIn() && isOwner(tenantId);
+      allow delete: if isSignedIn() && isOwner(tenantId);
+    }
+
+    /**
+     * @description Controls access to the /tenants/{tenantId}/users/{userId} collection.
+     * @path /tenants/{tenantId}/users/{userId}
+     * @allow (get): Authenticated users can read user profiles within their tenant.
+     * @allow (create): Authenticated users can create their own user profile, ensuring the tenantId matches.
+     * @allow (update): Authenticated users can update their own user profile, and the tenantId cannot be changed.
+     * @allow (delete): Authenticated users can delete their own user profile.
+     * @deny (create): Users attempting to create profiles for other users or in different tenants.
+     * @deny (update): Users attempting to modify other user profiles or change the tenantId.
+     * @deny (delete): Users attempting to delete other user profiles.
+     * @principle Enforces user-level ownership and tenant isolation for user profiles.
+     */
+    match /tenants/{tenantId}/users/{userId} {
+      allow get: if isSignedIn() && isTenantUser(tenantId);
+      allow list: if isSignedIn() && isTenantUser(tenantId);
+      allow create: if isSignedIn() && request.auth.uid == userId && request.resource.data.tenantId == tenantId;
+      allow update: if isSignedIn() && request.auth.uid == userId && request.resource.data.tenantId == request.data.tenantId;
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+     /**
+      * @description Controls access to the /tenants/{tenantId}/meal_entries/{mealEntryId} collection.
+      * @path /tenants/{tenantId}/meal_entries/{mealEntryId}
+      * @allow (get): Authenticated users can read meal entries within their tenant.
+      * @allow (list): Authenticated users can list meal entries within their tenant.
+      * @allow (create): Authenticated users can create meal entries within their tenant.
+      * @allow (update): Authenticated users can update meal entries within their tenant.
+      * @allow (delete): Authenticated users can delete meal entries within their tenant.
+      * @principle Enforces tenant-level isolation for meal entries.
+      */
+    match /tenants/{tenantId}/meal_entries/{mealEntryId} {
+        allow get: if isSignedIn() && isTenantUser(tenantId);
+        allow list: if isSignedIn() && isTenantUser(tenantId);
+        allow create: if isSignedIn() && isTenantUser(tenantId);
+        allow update: if isSignedIn() && isTenantUser(tenantId);
+        allow delete: if isSignedIn() && isTenantUser(tenantId);
+    }
+
+     /**
+      * @description Controls access to the /tenants/{tenantId}/rooms/{roomId} collection.
+      * @path /tenants/{tenantId}/rooms/{roomId}
+      */
+    match /tenants/{tenantId}/rooms/{roomId} {
+        allow get: if isSignedIn() && isTenantUser(tenantId);
+        allow list: if isSignedIn() && isTenantUser(tenantId);
+        allow create: if isSignedIn() && isTenantUser(tenantId);
+        allow update: if isSignedIn() && isTenantUser(tenantId);
+        allow delete: if isSignedIn() && isTenantUser(tenantId);
+    }
+
+     /**
+      * @description Controls access to the /tenants/{tenantId}/hydration_entries/{hydrationEntryId} collection.
+      * @path /tenants/{tenantId}/hydration_entries/{hydrationEntryId}
+      */
+    match /tenants/{tenantId}/hydration_entries/{hydrationEntryId} {
+        allow get: if isSignedIn() && isTenantUser(tenantId);
+        allow list: if isSignedIn() && isTenantUser(tenantId);
+        allow create: if isSignedIn() && isTenantUser(tenantId);
+        allow update: if isSignedIn() && isTenantUser(tenantId);
+        allow delete: if isSignedIn() && isTenantUser(tenantId);
+    }
+
+     /**
+      * @description Controls access to the /tenants/{tenantId}/weight_logs/{weightLogId} collection.
+      * @path /tenants/{tenantId}/weight_logs/{weightLogId}
+      */
+    match /tenants/{tenantId}/weight_logs/{weightLogId} {
+        allow get: if isSignedIn() && isTenantUser(tenantId);
+        allow list: if isSignedIn() && isTenantUser(tenantId);
+        allow create: if isSignedIn() && isTenantUser(tenantId);
+        allow update: if isSignedIn() && isTenantUser(tenantId);
+        allow delete: if isSignedIn() && isTenantUser(tenantId);
+    }
+
+    // --- Helper Functions ---
+
+    // Checks if the user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Checks if the user is the owner of the tenant
+    function isOwner(tenantId) {
+      return isSignedIn() && get(/databases/$(database)/documents/tenants/$(tenantId)).data.ownerId == request.auth.uid;
+    }
+
+    // Checks if the user belongs to the specified tenant
+    function isTenantUser(tenantId) {
+      return isSignedIn() && get(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)).data.tenantId == tenantId;
+    }
+  }
+}

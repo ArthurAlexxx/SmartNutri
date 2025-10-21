@@ -1,0 +1,253 @@
+{
+  "entities": {
+    "Tenant": {
+      "title": "Tenant",
+      "description": "Represents a white-label customer, typically a professional or a clinic.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "The name of the clinic or professional." },
+        "ownerId": { "type": "string", "description": "The user ID of the admin/owner of this tenant." },
+        "professionalIds": { "type": "array", "items": { "type": "string" }, "description": "List of user IDs for professionals in this tenant." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "subscriptionStatus": { "type": "string", "enum": ["trialing", "active", "past_due", "canceled", "incomplete"] },
+        "stripeCustomerId": { "type": "string" },
+        "stripeSubscriptionId": { "type": "string" },
+        "currentPeriodEnd": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId", "createdAt"]
+    },
+    "SiteConfig": {
+      "title": "SiteConfig",
+      "description": "Stores the tenant-specific website configuration.",
+      "type": "object",
+      "properties": {
+        "siteName": { "type": "string" }
+      }
+    },
+    "PlanTemplate": {
+        "title": "PlanTemplate",
+        "description": "Represents a reusable meal plan template created by a professional.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "tenantId": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "calorieGoal": { "type": "number" },
+            "hydrationGoal": { "type": "number" },
+            "meals": { 
+                "type": "array", 
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "time": { "type": "string" },
+                        "items": { "type": "string" }
+                    }
+                }
+            }
+        },
+        "required": ["id", "tenantId", "name"]
+    },
+    "Guideline": {
+        "title": "Guideline",
+        "description": "Represents a reusable piece of guidance or text created by a professional.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "tenantId": { "type": "string" },
+            "title": { "type": "string" },
+            "content": { "type": "string" }
+        },
+        "required": ["id", "tenantId", "title", "content"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Represents a subscription product that can be sold, managed in Stripe.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Stripe Product ID" },
+        "active": { "type": "boolean" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "role": { "type": "string", "description": "The role granted by this product (e.g., 'premium', 'professional')." }
+      },
+      "required": ["id", "active", "name", "role"]
+    },
+    "Price": {
+      "title": "Price",
+      "description": "Represents the price of a subscription product, managed in Stripe.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Stripe Price ID" },
+        "product": { "type": "string", "description": "Stripe Product ID this price belongs to." },
+        "active": { "type": "boolean" },
+        "unit_amount": { "type": "number", "description": "Price in the smallest currency unit (e.g., cents)." },
+        "currency": { "type": "string" },
+        "type": { "type": "string", "enum": ["one_time", "recurring"] },
+        "interval": { "type": "string", "enum": ["day", "week", "month", "year"] }
+      },
+      "required": ["id", "product", "active", "type"]
+    },
+    "Subscription": {
+        "title": "Subscription",
+        "description": "Represents a customer's subscription to a product.",
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Stripe Subscription ID" },
+          "status": { "type": "string", "enum": ["trialing", "active", "past_due", "canceled", "incomplete", "unpaid"] },
+          "stripeCustomerId": { "type": "string", "description": "The customer ID in Stripe." },
+          "userId": { "type": "string", "description": "The ID of the user this subscription belongs to." },
+          "price": { "type": "string", "description": "A reference to the Price entity." },
+          "current_period_end": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "userId", "price", "status"]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the NutriSmart application.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the user." },
+        "tenantId": { "type": "string", "description": "The tenant this user belongs to." },
+        "name": { "type": "string", "description": "User's full name." },
+        "email": { "type": "string", "description": "User's email address.", "format": "email" },
+        "dateJoined": { "type": "string", "format": "date-time" },
+        "whatsappPhoneNumber": { "type": "string", "description": "User's WhatsApp phone number for integration." }
+      },
+      "required": ["id", "tenantId", "name", "email", "dateJoined"]
+    },
+    "MealRecommendation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MealRecommendation",
+      "type": "object",
+      "description": "Represents a meal recommendation generated for a user.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "recipeName": { "type": "string" },
+        "ingredients": { "type": "string" },
+        "instructions": { "type": "string" },
+        "dateRecommended": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "recipeName", "ingredients", "instructions", "dateRecommended"]
+    },
+    "ContactMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ContactMessage",
+      "type": "object",
+      "description": "Represents a message sent by a user through the contact form.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "message": { "type": "string" },
+        "sentDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "email", "message", "sentDate"]
+    }
+  },
+  "auth": {
+    "providers": ["password", "anonymous"]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/tenants/{tenantId}",
+        "definition": {
+          "entityName": "Tenant",
+          "schema": { "$ref": "#/backend/entities/Tenant" },
+          "description": "Stores information about each white-label client (tenant), including subscription status."
+        }
+      },
+      {
+        "path": "/tenants/{tenantId}/config/site",
+        "definition": {
+          "entityName": "SiteConfig",
+          "schema": { "$ref": "#/backend/entities/SiteConfig" },
+          "description": "Stores the site configuration for a specific tenant."
+        }
+      },
+      {
+        "path": "/tenants/{tenantId}/plan_templates/{templateId}",
+        "definition": {
+          "entityName": "PlanTemplate",
+          "schema": { "$ref": "#/backend/entities/PlanTemplate" },
+          "description": "Reusable meal plan templates for a tenant."
+        }
+      },
+      {
+        "path": "/tenants/{tenantId}/guidelines/{guidelineId}",
+        "definition": {
+          "entityName": "Guideline",
+          "schema": { "$ref": "#/backend/entities/Guideline" },
+          "description": "Reusable guidelines and text blocks for a tenant."
+        }
+      },
+      {
+        "path": "/tenants/{tenantId}/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": { "$ref": "#/backend/entities/Product" },
+          "description": "Available subscription products for a tenant."
+        }
+      },
+       {
+        "path": "/tenants/{tenantId}/products/{productId}/prices/{priceId}",
+        "definition": {
+          "entityName": "Price",
+          "schema": { "$ref": "#/backend/entities/Price" },
+          "description": "Prices for a specific subscription product."
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "Stores user profiles, scoped to a tenant."
+        }
+      },
+       {
+        "path": "/users/{userId}/subscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "Subscription",
+          "schema": { "$ref": "#/backend/entities/Subscription" },
+          "description": "Stores user subscriptions for premium features."
+        }
+      },
+      {
+        "path": "/meal_entries/{mealEntryId}",
+        "definition": {
+            "entityName": "MealEntry",
+            "schema": { "$ref": "#/backend/entities/MealRecommendation" },
+            "description": "Stores meal entries for users, scoped to a tenant."
+        }
+      },
+      {
+        "path": "/rooms/{roomId}",
+        "definition": {
+            "entityName": "Room",
+            "description": "Stores professional-patient rooms, scoped to a tenant."
+        }
+      },
+      {
+        "path": "/hydration_entries/{hydrationEntryId}",
+        "definition": {
+            "entityName": "HydrationEntry",
+            "description": "Stores hydration entries for users, scoped to a tenant."
+        }
+      },
+      {
+        "path": "/weight_logs/{weightLogId}",
+        "definition": {
+            "entityName": "WeightLog",
+            "description": "Stores weight logs for users, scoped to a tenant."
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed for a multi-tenant (white-label) architecture. All data is partitioned by a `tenantId`, ensuring complete data isolation between different clients. This is crucial for security and scalability. Each tenant has its own set of users, rooms, meal entries, and configurations. Security rules must enforce that a user can only access data within their own tenantId."
+  }
+}
