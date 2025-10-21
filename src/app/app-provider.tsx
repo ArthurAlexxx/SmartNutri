@@ -60,11 +60,11 @@ function ConfigAndStyleLoader({ children }: { children: React.ReactNode }) {
             const hostname = window.location.hostname;
             const parts = hostname.split('.');
             
-            // Check for a valid subdomain, excluding 'www', and common development environments.
+            // Check for a valid subdomain, excluding 'www', and common development/platform environments.
             const isSubdomain = parts.length > 2 && parts[0] !== 'www';
-            const isLocalOrVercel = hostname.includes('localhost') || hostname.endsWith('vercel.app') || hostname.endsWith('.dev') || hostname.endsWith('cloudworkstations.dev');
+            const isPlatformDomain = hostname.includes('localhost') || hostname.endsWith('vercel.app') || hostname.endsWith('.dev') || hostname.endsWith('cloudworkstations.dev');
 
-            if (isSubdomain && !isLocalOrVercel) {
+            if (isSubdomain && !isPlatformDomain) {
                 setTenantId(parts[0]);
                 return;
             }
