@@ -1,25 +1,31 @@
 
 'use server';
 
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { Timestamp, addDoc, collection } from 'firebase/firestore'; // Note: This is from the client SDK
 import { getLocalDateString } from '@/lib/date-utils';
-import { Timestamp, addDoc, collection } from 'firebase/firestore';
 
-// Securely initialize Firebase Admin SDK
-if (!getApps().length) {
-  // This environment variable is automatically set by Vercel when you add the integration.
-  // For local development, you would set this in your .env.local file.
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-    : undefined;
+// Helper function to initialize admin app securely
+const initializeAdminApp = () => {
+    if (getApps().some(app => app.name === 'admin')) {
+        return getFirestore('admin');
+    }
 
-  initializeApp({
-    credential: serviceAccount ? require('firebase-admin').credential.cert(serviceAccount) : undefined,
-  });
-}
+    const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (!serviceAccountString) {
+        throw new Error('A chave da conta de serviço do Firebase não está configurada no ambiente.');
+    }
+    
+    const serviceAccount = JSON.parse(serviceAccountString);
 
-const db = getFirestore();
+    const adminApp = initializeApp({
+        credential: cert(serviceAccount)
+    }, 'admin');
+    
+    return getFirestore(adminApp);
+};
+
 
 interface FoodItem {
   name: string;
@@ -38,6 +44,14 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
   }
   if (!process.env.N8N_WEBHOOK_URL) {
     return { error: 'A URL do webhook de nutrição não está configurada.' };
+  }
+
+  let dbAdmin;
+  try {
+      dbAdmin = initializeAdminApp();
+  } catch (error: any) {
+      console.error("Erro ao inicializar Firebase Admin:", error);
+      return { error: 'Falha ao conectar com o serviço de banco de dados.' };
   }
 
   const webhookUrl = process.env.N8N_WEBHOOK_URL;
@@ -101,11 +115,11 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
           fibras: mealDataResult.fibras_g || 0,
         }
       },
-      createdAt: Timestamp.now(),
+      createdAt: Timestamp.now(), // Firestore client-side Timestamp
     };
 
-    const mealCollectionRef = collection(db, 'meal_entries');
-    const docRef = await addDoc(mealCollectionRef, mealEntryData);
+    // Use dbAdmin (Admin SDK) to write data
+    const docRef = await dbAdmin.collection('meal_entries').add(mealEntryData);
 
     const finalMealEntry = { ...mealEntryData, id: docRef.id };
 

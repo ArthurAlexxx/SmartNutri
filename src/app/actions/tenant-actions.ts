@@ -3,24 +3,45 @@
 'use server';
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore, collection, query, where, getDocs, writeBatch } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 
-// Securely initialize Firebase Admin SDK
-if (!getApps().length) {
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-    : undefined;
+// Helper function to initialize admin app securely
+const initializeAdminApp = () => {
+    // Check if the admin app is already initialized to avoid re-initialization
+    const adminApp = getApps().find(app => app.name === 'admin');
+    if (adminApp) {
+        return getFirestore(adminApp);
+    }
 
-  initializeApp({
-    credential: serviceAccount ? cert(serviceAccount) : undefined,
-  });
-}
+    // Get service account credentials from environment variables
+    const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (!serviceAccountString) {
+        throw new Error('A chave da conta de serviço do Firebase não está configurada no ambiente.');
+    }
+    
+    try {
+        const serviceAccount = JSON.parse(serviceAccountString);
 
-const db = getFirestore();
+        // Initialize the app with a unique name
+        const newAdminApp = initializeApp({
+            credential: cert(serviceAccount)
+        }, 'admin');
+        
+        return getFirestore(newAdminApp);
+    } catch (e: any) {
+        throw new Error(`Erro ao parsear a chave de serviço do Firebase: ${e.message}`);
+    }
+};
+
 
 export async function deleteTenant(tenantId: string): Promise<{ success: boolean; error?: string }> {
-  if (!db) {
-    return { success: false, error: "A conexão com o banco de dados não foi estabelecida." };
+  
+  let db;
+  try {
+      db = initializeAdminApp();
+  } catch (error: any) {
+      console.error("Erro ao inicializar Firebase Admin:", error);
+      return { success: false, error: 'Falha ao conectar com o serviço de banco de dados.' };
   }
 
   try {
