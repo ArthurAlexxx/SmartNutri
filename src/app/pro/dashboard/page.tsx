@@ -22,8 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { deleteTenant, deleteUserAndData } from '@/app/actions/tenant-actions';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { deleteTenant } from '@/app/actions/tenant-actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
@@ -35,7 +34,6 @@ export default function ProDashboardPage() {
 
   const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [allTenants, setAllTenants] = useState<Tenant[]>([]);
-  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
    useEffect(() => {
@@ -55,15 +53,11 @@ export default function ProDashboardPage() {
 
         let unsubRooms: Unsubscribe | undefined;
         let unsubTenants: Unsubscribe | undefined;
-        let unsubUsers: Unsubscribe | undefined;
 
         if (isSuperAdmin) {
             unsubTenants = onSnapshot(collection(firestore, 'tenants'), (snapshot) => {
                 setAllTenants(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant)));
                 setLoading(false);
-            });
-            unsubUsers = onSnapshot(collection(firestore, 'users'), (snapshot) => {
-                setAllUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile)));
             });
         } 
         else if (userProfile.professionalRoomIds && userProfile.professionalRoomIds.length > 0) {
@@ -81,7 +75,6 @@ export default function ProDashboardPage() {
         return () => {
           if (unsubRooms) unsubRooms();
           if (unsubTenants) unsubTenants();
-          if (unsubUsers) unsubUsers();
         };
     }
   }, [user, userProfile, isUserLoading, router, firestore]);
@@ -89,7 +82,6 @@ export default function ProDashboardPage() {
   const handleProfileUpdate = useCallback(() => {}, []);
 
   const totalPatients = allRooms.length;
-  const activePlans = allRooms.filter(room => room.activePlan && room.activePlan.meals.length > 0).length;
 
   const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
     const result = await deleteTenant(tenantId);
@@ -100,20 +92,7 @@ export default function ProDashboardPage() {
     }
   };
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
-    const result = await deleteUserAndData(userId);
-    if (result.success) {
-      toast({ title: 'Usuário Removido', description: `O usuário ${userName} e todos os seus dados foram removidos.` });
-    } else {
-      toast({ title: 'Erro ao Remover', description: result.error, variant: 'destructive' });
-    }
-  };
-
   const isSuperAdmin = userProfile?.role === 'super-admin';
-  const tenantMap = allTenants.reduce((acc, tenant) => {
-    acc[tenant.id] = tenant.name;
-    return acc;
-  }, {} as Record<string, string>);
 
   if (loading || isUserLoading) {
     return (
@@ -140,141 +119,75 @@ export default function ProDashboardPage() {
                     <p className="text-2xl font-bold">{totalPatients}</p>
                 </div>
             </div>
-            {/* Outros cards podem ser adicionados aqui */}
         </CardContent>
     </Card>
   );
 
   const renderSuperAdminDashboard = () => (
-    <Tabs defaultValue="tenants" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="tenants"><Building className="mr-2 h-4 w-4"/> Clínicas (Tenants)</TabsTrigger>
-            <TabsTrigger value="users"><Users className="mr-2 h-4 w-4"/> Usuários</TabsTrigger>
-        </TabsList>
-        <TabsContent value="tenants" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Gerenciamento de Clínicas</CardTitle>
-                    <CardDescription>
-                    Visualize e gerencie todas as clínicas ativas na plataforma.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Clínica</TableHead>
-                            <TableHead className="hidden sm:table-cell">Status da Assinatura</TableHead>
-                            <TableHead className="hidden sm:table-cell">Profissionais</TableHead>
-                            <TableHead className="hidden md:table-cell">Criado em</TableHead>
-                            <TableHead><span className="sr-only">Ações</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {allTenants.map((tenant) => (
-                            <TableRow key={tenant.id}>
-                                <TableCell>
-                                <div className="font-medium">{tenant.name}</div>
-                                <div className="hidden text-sm text-muted-foreground md:inline">
-                                    ID: {tenant.id}
-                                </div>
-                                </TableCell>
-                                <TableCell className="hidden sm:table-cell">
-                                <Badge variant={tenant.subscriptionStatus === 'active' ? 'default' : 'secondary'}>{tenant.subscriptionStatus || 'N/A'}</Badge>
-                                </TableCell>
-                                <TableCell className="hidden sm:table-cell">{tenant.professionalIds?.length || 0}</TableCell>
-                                <TableCell className="hidden md:table-cell">
-                                {tenant.createdAt?.toDate().toLocaleDateString() || 'N/A'}
-                                </TableCell>
-                                <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">Toggle menu</span>
-                                    </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
-                                                <Trash2 className="mr-2 h-4 w-4" /> Deletar
-                                            </DropdownMenuItem>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader><AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle><AlertDialogDescription>Você tem CERTEZA que quer deletar o tenant "{tenant.name}"? Esta ação é irreversível e deletará a clínica, seus profissionais e pacientes.</AlertDialogDescription></AlertDialogHeader>
-                                            <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteTenant(tenant.id, tenant.name)}>Confirmar</AlertDialogAction></AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="users" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Gerenciamento de Usuários</CardTitle>
-                    <CardDescription>Visualize e gerencie todos os usuários da plataforma.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Usuário</TableHead>
-                                <TableHead className="hidden sm:table-cell">Tipo</TableHead>
-                                <TableHead className="hidden md:table-cell">Clínica (Tenant)</TableHead>
-                                <TableHead><span className="sr-only">Ações</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {allUsers.map((userItem) => (
-                                <TableRow key={userItem.id}>
-                                    <TableCell>
-                                        <div className="font-medium">{userItem.fullName}</div>
-                                        <div className="text-sm text-muted-foreground">{userItem.email}</div>
-                                    </TableCell>
-                                    <TableCell className="hidden sm:table-cell">
-                                        <Badge variant={userItem.profileType === 'professional' ? 'secondary' : 'outline'}>
-                                            {userItem.profileType === 'professional' ? 'Profissional' : 'Paciente'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">{tenantMap[userItem.tenantId] || userItem.tenantId}</TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Toggle menu</span></Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
-                                                            <Trash2 className="mr-2 h-4 w-4" /> Deletar Usuário
-                                                        </DropdownMenuItem>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader><AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle><AlertDialogDescription>Você tem certeza que quer deletar o usuário "{userItem.fullName}" e todos os seus dados? Esta ação é irreversível.</AlertDialogDescription></AlertDialogHeader>
-                                                        <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(userItem.id, userItem.fullName)}>Confirmar</AlertDialogAction></AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </TabsContent>
-    </Tabs>
+      <Card>
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Building className="h-5 w-5"/>Gerenciamento de Clínicas</CardTitle>
+              <CardDescription>
+              Visualize e gerencie todas as clínicas (tenants) ativas na plataforma.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              <Table>
+                  <TableHeader>
+                      <TableRow>
+                      <TableHead>Clínica</TableHead>
+                      <TableHead className="hidden sm:table-cell">Status da Assinatura</TableHead>
+                      <TableHead className="hidden sm:table-cell">Profissionais</TableHead>
+                      <TableHead className="hidden md:table-cell">Criado em</TableHead>
+                      <TableHead><span className="sr-only">Ações</span></TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {allTenants.map((tenant) => (
+                      <TableRow key={tenant.id}>
+                          <TableCell>
+                          <div className="font-medium">{tenant.name}</div>
+                          <div className="hidden text-sm text-muted-foreground md:inline">
+                              ID: {tenant.id}
+                          </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                          <Badge variant={tenant.subscriptionStatus === 'active' ? 'default' : 'secondary'}>{tenant.subscriptionStatus || 'N/A'}</Badge>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">{tenant.professionalIds?.length || 0}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                          {tenant.createdAt?.toDate().toLocaleDateString() || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                              <Button aria-haspopup="true" size="icon" variant="ghost">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Toggle menu</span>
+                              </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                              <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
+                                          <Trash2 className="mr-2 h-4 w-4" /> Deletar
+                                      </DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                      <AlertDialogHeader><AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle><AlertDialogDescription>Você tem CERTEZA que quer deletar o tenant "{tenant.name}"? Esta ação é irreversível e deletará a clínica e todos os seus profissionais e pacientes.</AlertDialogDescription></AlertDialogHeader>
+                                      <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteTenant(tenant.id, tenant.name)}>Confirmar</AlertDialogAction></AlertDialogFooter>
+                                  </AlertDialogContent>
+                              </AlertDialog>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                          </TableCell>
+                      </TableRow>
+                      ))}
+                  </TableBody>
+              </Table>
+          </CardContent>
+      </Card>
   );
 
   return (
