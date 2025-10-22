@@ -1,3 +1,4 @@
+
 // src/app/actions/meal-actions.ts
 'use server';
 
@@ -20,7 +21,6 @@ function initializeAdminApp() {
 
         const parsedServiceAccount = JSON.parse(serviceAccountKey);
         
-        // **A CORREÇÃO DEFINITIVA ESTÁ AQUI**
         // Garante que as quebras de linha na chave privada sejam interpretadas corretamente.
         if (parsedServiceAccount.private_key) {
             parsedServiceAccount.private_key = parsedServiceAccount.private_key.replace(/\\n/g, '\n');
