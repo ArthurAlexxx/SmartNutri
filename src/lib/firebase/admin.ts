@@ -1,3 +1,4 @@
+
 // src/lib/firebase/admin.ts
 import * as admin from 'firebase-admin';
 
@@ -24,7 +25,8 @@ export async function initializeAdminApp() {
             serviceAccountJson = JSON.parse(serviceAccountKey);
         } catch (e) {
             // If that fails, it might be a double-escaped string. Parse it again.
-            serviceAccountJson = JSON.parse(serviceAccountKey);
+            // This is a common issue in some environments.
+            serviceAccountJson = JSON.parse(JSON.parse(JSON.stringify(serviceAccountKey)));
         }
 
         // Vercel and other environments might escape newlines. This line fixes it.
