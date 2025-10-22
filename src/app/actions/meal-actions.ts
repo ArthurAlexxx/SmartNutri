@@ -1,4 +1,3 @@
-
 // src/app/actions/meal-actions.ts
 'use server';
 
@@ -18,9 +17,17 @@ function initializeAdminApp() {
         if (!serviceAccountKey) {
             throw new Error("A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida.");
         }
-
-        const parsedServiceAccount = JSON.parse(serviceAccountKey);
         
+        let parsedServiceAccount;
+        try {
+            // Tenta analisar diretamente.
+            parsedServiceAccount = JSON.parse(serviceAccountKey);
+        } catch (e) {
+            // Se falhar, assume que é uma string "escapada" e tenta analisar de novo.
+            // Isso é comum em ambientes como Vercel.
+            parsedServiceAccount = JSON.parse(JSON.parse(JSON.stringify(serviceAccountKey)));
+        }
+
         // Garante que as quebras de linha na chave privada sejam interpretadas corretamente.
         if (parsedServiceAccount.private_key) {
             parsedServiceAccount.private_key = parsedServiceAccount.private_key.replace(/\\n/g, '\n');
@@ -33,6 +40,7 @@ function initializeAdminApp() {
         return { adminApp, initError: null };
     } catch (error: any) {
         console.error("[initializeAdminApp] Erro ao inicializar o Firebase Admin:", error.message);
+        // Retorna uma mensagem de erro mais específica para o problema de parsing.
         return { adminApp: null, initError: `Erro de parsing na chave de serviço: ${error.message}` };
     }
 }
