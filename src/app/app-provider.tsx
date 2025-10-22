@@ -49,13 +49,20 @@ function ConfigAndStyleLoader({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (isUserLoading) return;
 
-        // If the user is logged in, their site config is determined by their tenant.
+        // If user is logged in, decide tenantId based on their profile type.
         if (userProfile) {
-            setTenantId(userProfile.tenantId);
+            // PATIENTS always see the default site.
+            if (userProfile.profileType === 'patient') {
+                setTenantId('default');
+            } 
+            // PROFESSIONALS see their own tenant's site.
+            else if (userProfile.profileType === 'professional') {
+                setTenantId(userProfile.tenantId);
+            }
             return;
         }
 
-        // For anonymous visitors, determine the tenant from the subdomain.
+        // For ANONYMOUS visitors, determine the tenant from the subdomain.
         if (typeof window !== 'undefined') {
             const hostname = window.location.hostname;
             const parts = hostname.split('.');
@@ -70,7 +77,7 @@ function ConfigAndStyleLoader({ children }: { children: React.ReactNode }) {
             }
         }
         
-        // Fallback to the default site config if no specific tenant is found.
+        // Fallback to the default site config for the main platform landing page.
         setTenantId('default');
 
     }, [userProfile, isUserLoading]);
