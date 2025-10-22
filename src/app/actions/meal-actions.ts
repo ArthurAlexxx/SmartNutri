@@ -2,37 +2,6 @@
 'use server';
 
 import { getLocalDateString } from '@/lib/date-utils';
-import { v4 as uuidv4 } from 'uuid';
-import * as admin from 'firebase-admin';
-
-// Função para inicializar o Firebase Admin SDK de forma segura
-function initializeAdminApp() {
-    try {
-        // Se já houver um app inicializado, use-o.
-        if (admin.apps.length > 0) {
-            return { db: admin.firestore() };
-        }
-        
-        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-        if (!serviceAccountKey) {
-            throw new Error("A chave da conta de serviço do Firebase não foi encontrada nas variáveis de ambiente.");
-        }
-
-        // Parse da chave, garantindo que a private_key seja formatada corretamente
-        const parsedKey = JSON.parse(serviceAccountKey);
-        parsedKey.private_key = parsedKey.private_key.replace(/\\n/g, '\n');
-
-        admin.initializeApp({
-            credential: admin.credential.cert(parsedKey),
-        });
-        
-        return { db: admin.firestore() };
-    } catch (error: any) {
-        console.error("Falha ao inicializar o Firebase Admin:", error.message);
-        // Retorna um objeto de erro claro para ser tratado pela função que chama
-        return { error: "Falha ao conectar com o serviço de banco de dados." };
-    }
-}
 
 interface FoodItem {
   name: string;
@@ -45,31 +14,27 @@ interface AddMealFormData {
   foods: FoodItem[];
 }
 
+// Esta ação agora apenas envia os dados para o n8n.
+// O n8n será responsável por calcular os nutrientes E salvar no Firebase.
 export async function addMealEntry(userId: string, data: AddMealFormData) {
   if (!userId) {
     return { error: 'Usuário não autenticado.' };
   }
 
-  // A inicialização agora acontece dentro da action
-  const { db, error: initError } = initializeAdminApp();
-  if (initError || !db) {
-    // Se a inicialização falhar, retorne o erro.
-    return { error: initError || "Falha ao conectar com o serviço de banco de dados." };
-  }
-
   const webhookUrl = process.env.N8N_WEBHOOK_URL;
   if (!webhookUrl) {
-    return { error: 'A URL do webhook de nutrição não está configurada.' };
+    return { error: 'A URL do serviço de nutrição não está configurada.' };
   }
 
-  const combinedFoodString = data.foods
-    .map(food => `${food.portion}${food.unit} de ${food.name}`)
-    .join(' e ');
-
   try {
+    // O payload agora inclui todos os dados necessários para o n8n
+    // salvar a refeição no Firestore.
     const payload = {
-      action: 'ref',
-      alimento: combinedFoodString,
+      action: 'add_meal', // Uma nova ação para o n8n identificar
+      userId: userId,
+      mealType: data.mealType,
+      foods: data.foods,
+      date: getLocalDateString(),
     };
 
     const response = await fetch(webhookUrl, {
@@ -81,48 +46,11 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     if (!response.ok) {
         const errorText = await response.text();
         console.error("Webhook error response:", errorText);
+        // Retorna a mensagem de erro do webhook diretamente para o usuário
         throw new Error(`O serviço de nutrição retornou um erro: ${errorText || response.statusText}`);
     }
 
-    const responseData = await response.json();
-    
-    let nutritionData;
-    // Handle the nested structure: [{ "output": "{\"resultado\":{...}}" }]
-    if (Array.isArray(responseData) && responseData.length > 0 && responseData[0].output) {
-      const nestedOutput = JSON.parse(responseData[0].output);
-      nutritionData = nestedOutput.resultado;
-    } else {
-      // Fallback for a direct response, just in case
-      nutritionData = responseData.resultado;
-    }
-
-    if (!nutritionData) {
-      throw new Error('Formato de resposta de nutrição inesperado do webhook.');
-    }
-
-    const mealId = uuidv4();
-    const mealEntry = {
-      id: mealId,
-      userId: userId,
-      date: getLocalDateString(),
-      mealType: data.mealType,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      mealData: {
-        alimentos: data.foods.map(f => ({ nome: f.name, porcao: f.portion, unidade: f.unit, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
-        totais: {
-          calorias: nutritionData.calorias_kcal || 0,
-          proteinas: nutritionData.proteinas_g || 0,
-          carboidratos: nutritionData.carboidratos_g || 0,
-          gorduras: nutritionData.gorduras_g || 0,
-          fibras: nutritionData.fibras_g || 0,
-        },
-      },
-    };
-    
-    // Salva a refeição no Firestore
-    const mealRef = db.collection('meal_entries').doc(mealId);
-    await mealRef.set(mealEntry);
-
+    // Como o n8n agora salva no DB, um status 200 OK é suficiente.
     return { success: true };
 
   } catch (error: any) {

@@ -15,7 +15,7 @@ import { addMealEntry } from '@/app/actions/meal-actions';
 
 const foodItemSchema = z.object({
   name: z.string().min(1, 'O nome do alimento é obrigatório.'),
-  portion: z.coerce.number().min(1, 'A porção deve ser maior que 0.'),
+  portion: z.coerce.number().min(0.1, 'A porção deve ser maior que 0.'),
   unit: z.string().min(1, 'A unidade é obrigatória.'),
 });
 
@@ -29,8 +29,8 @@ type AddMealFormValues = z.infer<typeof formSchema>;
 interface AddMealModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onMealAdded: (meal: any) => void; // O listener do Firestore cuidará da atualização
-  userId: string | null;
+  onMealAdded: (meal: any) => void; // A UI será atualizada pelo listener do Firestore.
+  userId: string;
 }
 
 export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId }: AddMealModalProps) {
@@ -39,7 +39,7 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
     resolver: zodResolver(formSchema),
     defaultValues: {
       mealType: '',
-      foods: [{ name: '', portion: 0, unit: 'g' }],
+      foods: [{ name: '', portion: 100, unit: 'g' }],
     },
   });
 
@@ -51,15 +51,6 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: AddMealFormValues) => {
-    if (!userId) {
-      toast({
-        title: "Erro de autenticação",
-        description: "Usuário não disponível. Por favor, faça login novamente.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     const result = await addMealEntry(userId, data);
 
     if (result.error) {
@@ -70,14 +61,13 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
       });
     } else if (result.success) {
       // O listener do Firestore na página do dashboard cuidará de atualizar a UI.
-      // A função onMealAdded agora é apenas um placeholder.
       toast({
           title: "Refeição Adicionada! ✅",
           description: "Sua refeição foi registrada com sucesso e aparecerá no seu diário.",
       });
       form.reset({
         mealType: '',
-        foods: [{ name: '', portion: 0, unit: 'g' }],
+        foods: [{ name: '', portion: 100, unit: 'g' }],
       });
       onOpenChange(false);
     }
@@ -125,7 +115,7 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ name: '', portion: 0, unit: 'g' })}
+                  onClick={() => append({ name: '', portion: 100, unit: 'g' })}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Adicionar Alimento
@@ -210,7 +200,7 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting || !userId}>
+              <Button type="submit" disabled={isSubmitting}>
                  {isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
