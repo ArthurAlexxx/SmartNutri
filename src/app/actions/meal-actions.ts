@@ -1,4 +1,3 @@
-
 // src/app/actions/meal-actions.ts
 'use server';
 
@@ -101,7 +100,7 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
       mealType: data.mealType,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       mealData: {
-        alimentos: data.foods.map(f => ({ ...f, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
+        alimentos: data.foods.map(f => ({ nome: f.name, porcao: f.portion, unidade: f.unit, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
         totais: {
           calorias: nutritionData.calorias_kcal || 0,
           proteinas: nutritionData.proteinas_g || 0,
