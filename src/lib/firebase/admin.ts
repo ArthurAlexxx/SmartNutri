@@ -1,4 +1,3 @@
-
 // src/lib/firebase/admin.ts
 import * as admin from 'firebase-admin';
 
@@ -7,10 +6,10 @@ import * as admin from 'firebase-admin';
  * This function is designed to work in serverless environments like Vercel
  * by correctly parsing the service account key from environment variables.
  */
-export async function initializeAdminApp() {
-    // If the app is already initialized, do nothing.
+export function initializeAdminApp() {
+    // If the app is already initialized, return the existing app.
     if (admin.apps.length > 0) {
-        return;
+        return admin.app();
     }
 
     const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -21,11 +20,10 @@ export async function initializeAdminApp() {
     try {
         let serviceAccountJson;
         try {
-            // First, try to parse it directly. This works if the env var is a clean JSON.
+            // Standard parsing for a clean JSON string.
             serviceAccountJson = JSON.parse(serviceAccountKey);
         } catch (e) {
-            // If that fails, it might be a double-escaped string. Parse it again.
-            // This is a common issue in some environments.
+            // Fallback for double-escaped strings which can occur in some environments.
             serviceAccountJson = JSON.parse(JSON.parse(JSON.stringify(serviceAccountKey)));
         }
 
@@ -34,15 +32,14 @@ export async function initializeAdminApp() {
             serviceAccountJson.private_key = serviceAccountJson.private_key.replace(/\\n/g, '\n');
         }
 
-        // Initialize the app with the corrected credentials
-        admin.initializeApp({
+        // Initialize the app with the corrected credentials.
+        return admin.initializeApp({
             credential: admin.credential.cert(serviceAccountJson),
         });
 
     } catch (error: any) {
-        console.error("Falha Crítica ao inicializar o Firebase Admin SDK:", error);
+        console.error("Falha Crítica ao inicializar o Firebase Admin SDK:", error.message);
+        // Throw a more user-friendly error to be caught by server action callers.
         throw new Error("Erro de parsing na chave de serviço. Verifique o formato da variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY.");
     }
 }
-
-export { admin };

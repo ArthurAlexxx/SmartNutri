@@ -1,8 +1,7 @@
-
 // src/app/actions/tenant-actions.ts
 'use server';
 
-import { admin, initializeAdminApp } from '@/lib/firebase/admin';
+import { initializeAdminApp } from '@/lib/firebase/admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 
@@ -12,7 +11,7 @@ import { getAuth } from 'firebase-admin/auth';
  */
 export async function deleteTenant(tenantId: string): Promise<{ success: boolean; error?: string }> {
     try {
-        await initializeAdminApp();
+        initializeAdminApp();
         const db = getFirestore();
         const auth = getAuth();
 
@@ -65,7 +64,7 @@ export async function deleteTenant(tenantId: string): Promise<{ success: boolean
  */
 export async function deleteUserAndData(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-        await initializeAdminApp();
+        initializeAdminApp();
         const db = getFirestore();
         const auth = getAuth();
 
@@ -94,7 +93,8 @@ export async function deleteUserAndData(userId: string): Promise<{ success: bool
         await auth.deleteUser(userId);
 
         return { success: true };
-    } catch (error: any) {
+    } catch (error: any)
+    {
         console.error("Erro ao deletar usuário e seus dados:", error);
         return { success: false, error: error.message || 'Ocorreu um erro desconhecido ao deletar o usuário.' };
     }
