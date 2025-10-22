@@ -1,4 +1,3 @@
-
 // src/app/actions/meal-actions.ts
 'use server';
 
@@ -35,11 +34,7 @@ export async function getNutritionalInfo(userId: string, data: AddMealFormData):
     }
 
     const webhookUrl = 'https://n8n.srv1061126.hstgr.cloud/webhook/881ba59f-a34a-43e9-891e-483ec8f7b1ef';
-    if (!webhookUrl) {
-        console.error('[getNutritionalInfo] Falha: A URL do webhook não está definida.');
-        return { error: 'A URL do serviço de nutrição não está configurada corretamente no servidor.' };
-    }
-
+    
     try {
         const formattedFoods = data.foods.map(food => `${food.portion}${food.unit} de ${food.name}`).join(', ');
 

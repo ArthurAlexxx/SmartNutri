@@ -2,37 +2,9 @@
 // src/app/actions/tenant-actions.ts
 'use server';
 
-import { admin } from '@/lib/firebase/admin';
+import { admin, initializeAdminApp } from '@/lib/firebase/admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-
-async function initializeAdminApp() {
-    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-    if (!serviceAccountKey) {
-        throw new Error('A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida.');
-    }
-
-    // Apenas inicialize se não houver apps existentes
-    if (admin.apps.length === 0) {
-        try {
-            // Analisa a string da chave de serviço
-            const serviceAccount = JSON.parse(serviceAccountKey);
-
-            // Garante que a private_key tenha as quebras de linha corretas
-            if (serviceAccount.private_key && serviceAccount.private_key.includes('\\n')) {
-                serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-            }
-
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-            });
-        } catch (error: any) {
-            console.error("Falha ao inicializar o Firebase Admin SDK:", error);
-            throw new Error("Erro de parsing na chave de serviço. Verifique a variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY.");
-        }
-    }
-}
-
 
 /**
  * Deleta um tenant e todos os dados associados.
