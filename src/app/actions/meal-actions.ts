@@ -3,7 +3,7 @@
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Timestamp, addDoc, collection } from 'firebase/firestore'; // Note: This is from the client SDK
+import { Timestamp } from 'firebase/firestore'; // Note: This is from the CLIENT SDK, but used for type casting on return
 import { getLocalDateString } from '@/lib/date-utils';
 
 // Helper function to initialize admin app securely
@@ -42,7 +42,9 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
   if (!userId) {
     return { error: 'Usuário não autenticado.' };
   }
-  if (!process.env.N8N_WEBHOOK_URL) {
+  
+  const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+  if (!webhookUrl) {
     return { error: 'A URL do webhook de nutrição não está configurada.' };
   }
 
@@ -53,8 +55,6 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
       console.error("Erro ao inicializar Firebase Admin:", error);
       return { error: 'Falha ao conectar com o serviço de banco de dados.' };
   }
-
-  const webhookUrl = process.env.N8N_WEBHOOK_URL;
     
   const combinedFoodString = data.foods
     .map(food => `${food.portion}${food.unit} de ${food.name}`)

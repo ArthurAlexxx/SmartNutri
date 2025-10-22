@@ -300,7 +300,17 @@ export default function PlanEditor({ room, userProfile }: PlanEditorProps) {
         description: "Aguarde enquanto a IA prepara um plano alimentar personalizado."
     });
 
-    const webhookUrl = 'https://n8n.srv1061126.hstgr.cloud/webhook/881ba59f-a34a-43e9-891e-483ec8f7b1ef';
+    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+    
+    if (!webhookUrl) {
+      toast({
+        title: "Erro de Configuração",
+        description: "A URL para o serviço de IA não está definida.",
+        variant: "destructive"
+      });
+      setIsGenerating(false);
+      return;
+    }
     
     try {
         const aiData = getAIData();
