@@ -8,22 +8,30 @@ import { getLocalDateString } from '@/lib/date-utils';
 
 // Helper function to initialize admin app securely
 const initializeAdminApp = () => {
-    if (getApps().some(app => app.name === 'admin')) {
-        return getFirestore('admin');
+    // Check if the admin app is already initialized to avoid re-initialization
+    const adminApp = getApps().find(app => app.name === 'admin');
+    if (adminApp) {
+        return getFirestore(adminApp);
     }
 
+    // Get service account credentials from environment variables
     const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (!serviceAccountString) {
         throw new Error('A chave da conta de serviço do Firebase não está configurada no ambiente.');
     }
     
-    const serviceAccount = JSON.parse(serviceAccountString);
+    try {
+        const serviceAccount = JSON.parse(serviceAccountString);
 
-    const adminApp = initializeApp({
-        credential: cert(serviceAccount)
-    }, 'admin');
-    
-    return getFirestore(adminApp);
+        // Initialize the app with a unique name
+        const newAdminApp = initializeApp({
+            credential: cert(serviceAccount)
+        }, 'admin');
+        
+        return getFirestore(newAdminApp);
+    } catch (e: any) {
+        throw new Error(`Erro ao parsear a chave de serviço do Firebase: ${e.message}`);
+    }
 };
 
 
