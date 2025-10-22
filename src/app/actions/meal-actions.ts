@@ -21,7 +21,6 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     return { error: 'Usuário não autenticado. A autenticação é necessária.' };
   }
 
-  // URL de teste fixada temporariamente para depuração
   const webhookUrl = "https://n8n.srv1061126.hstgr.cloud/webhook-test/881ba59f-a34a-43e9-891e-483ec8f7b1ef";
   
   if (!webhookUrl) {
@@ -31,11 +30,14 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
   console.log('[addMealEntry] Info: Usando URL de Webhook de teste.');
 
   try {
+    // Formata o array de comidas para um array de strings, como solicitado.
+    const formattedFoods = data.foods.map(food => `${food.portion}${food.unit} de ${food.name}`);
+
     const payload = {
       action: 'add_meal',
       userId: userId,
       mealType: data.mealType,
-      foods: data.foods,
+      foods: formattedFoods,
       date: getLocalDateString(),
     };
     console.log('[addMealEntry] Info: Enviando o seguinte payload para o n8n:', JSON.stringify(payload));
@@ -51,17 +53,14 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     if (!response.ok) {
         const errorText = await response.text();
         console.error(`[addMealEntry] Falha: Webhook retornou um erro ${response.status}. Resposta: ${errorText}`);
-        // Retorna a mensagem de erro do webhook diretamente para o usuário
         throw new Error(`O serviço de nutrição retornou um erro: ${errorText || response.statusText}`);
     }
 
-    // O n8n agora salva no DB, então um status 200 OK é suficiente.
     console.log('[addMealEntry] Sucesso: Refeição processada e salva pelo n8n.');
     return { success: true };
 
   } catch (error: any) {
     console.error("[addMealEntry] Falha Crítica na Server Action:", error);
-    // Retorna a mensagem de erro da exceção para o cliente
     return { error: error.message || 'Ocorreu um erro desconhecido ao contatar o serviço de nutrição.' };
   }
 }
