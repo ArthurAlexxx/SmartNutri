@@ -1,3 +1,4 @@
+
 // src/app/actions/meal-actions.ts
 'use server';
 
@@ -57,7 +58,7 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     return { error: initError || "Falha ao conectar com o serviço de banco de dados." };
   }
 
-  const webhookUrl = process.env.N8N_WEBHOOK_URL;
+  const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
   if (!webhookUrl) {
     return { error: 'A URL do webhook de nutrição não está configurada.' };
   }
