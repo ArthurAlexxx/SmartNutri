@@ -33,7 +33,7 @@ export async function getNutritionalInfo(userId: string, data: AddMealFormData):
         return { error: 'Usuário não autenticado.' };
     }
 
-    const webhookUrl = "https://n8n.srv1061126.hstgr.cloud/webhook-test/881ba59f-a34a-43e9-891e-483ec8f7b1ef";
+    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     if (!webhookUrl) {
         console.error('[getNutritionalInfo] Falha: A URL do webhook não está definida.');
         return { error: 'A URL do serviço de nutrição não está configurada corretamente no servidor.' };
@@ -64,11 +64,13 @@ export async function getNutritionalInfo(userId: string, data: AddMealFormData):
 
         const webhookResponse = await response.json();
 
+        // A resposta do n8n é um array com um objeto, e o output é uma string JSON
         const nutritionalResultString = webhookResponse[0]?.output;
         if (!nutritionalResultString) {
             throw new Error('A resposta do webhook não contém o campo "output" esperado.');
         }
 
+        // Parse da string JSON para obter o objeto de resultado
         const parsedResult = JSON.parse(nutritionalResultString);
         const webhookTotals = parsedResult.resultado;
 
@@ -82,7 +84,7 @@ export async function getNutritionalInfo(userId: string, data: AddMealFormData):
             proteinas: webhookTotals.proteinas_g,
             carboidratos: webhookTotals.carboidratos_g,
             gorduras: webhookTotals.gorduras_g,
-            fibras: webhookTotals.fibras_g || 0,
+            fibras: webhookTotals.fibras_g || 0, // Fibras pode ser opcional
         };
         
         return { totals };
