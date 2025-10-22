@@ -1,9 +1,41 @@
 // src/app/actions/tenant-actions.ts
 'use server';
 
-import { initializeAdminApp } from '@/lib/firebase/admin';
+import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
+
+/**
+ * Initializes the Firebase Admin SDK, ensuring it only runs once per serverless function instance.
+ * This is now self-contained within the actions file to ensure environment variables are available.
+ */
+function initializeAdminApp() {
+    if (admin.apps.length > 0) {
+        return admin.app();
+    }
+
+    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (!serviceAccountKey) {
+        throw new Error('A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida.');
+    }
+
+    try {
+        const serviceAccountJson = JSON.parse(serviceAccountKey);
+        
+        // Correctly format the private key by replacing escaped newlines.
+        if (serviceAccountJson.private_key) {
+            serviceAccountJson.private_key = serviceAccountJson.private_key.replace(/\\n/g, '\n');
+        }
+
+        return admin.initializeApp({
+            credential: admin.credential.cert(serviceAccountJson),
+        });
+    } catch (error: any) {
+        console.error("Critical Failure initializing Firebase Admin SDK:", error.message);
+        throw new Error("Erro de parsing na chave de serviço. Verifique o formato da variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY.");
+    }
+}
+
 
 /**
  * Deleta um tenant e todos os dados associados.
