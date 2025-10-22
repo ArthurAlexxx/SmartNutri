@@ -1,3 +1,4 @@
+
 // src/app/actions/meal-actions.ts
 'use server';
 
@@ -64,13 +65,16 @@ export async function getNutritionalInfo(userId: string, data: AddMealFormData):
 
         const webhookResponse = await response.json();
 
-        // A resposta do n8n é um array com um objeto, e o output é uma string JSON
-        const nutritionalResultString = webhookResponse[0]?.output;
-        if (!nutritionalResultString) {
+        // A resposta do n8n é um array com um objeto, e o output é uma string JSON com markdown
+        const rawOutput = webhookResponse[0]?.output;
+        if (!rawOutput) {
             throw new Error('A resposta do webhook não contém o campo "output" esperado.');
         }
 
-        // Parse da string JSON para obter o objeto de resultado
+        // Limpa o markdown da string JSON
+        const nutritionalResultString = rawOutput.replace(/```json\n/g, "").replace(/\n```/g, "");
+
+        // Parse da string JSON limpa para obter o objeto de resultado
         const parsedResult = JSON.parse(nutritionalResultString);
         const webhookTotals = parsedResult.resultado;
 
