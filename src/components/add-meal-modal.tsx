@@ -11,7 +11,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { MealEntry } from '@/types/meal';
 import { addMealEntry } from '@/app/actions/meal-actions';
 
 const foodItemSchema = z.object({
@@ -30,7 +29,7 @@ type AddMealFormValues = z.infer<typeof formSchema>;
 interface AddMealModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onMealAdded: (mealEntry: MealEntry) => void; // Mantido para possível uso futuro, mas não será chamado
+  onMealAdded: (meal: any) => void; // O listener do Firestore cuidará da atualização
   userId: string | null;
 }
 
@@ -71,6 +70,7 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
       });
     } else if (result.success) {
       // O listener do Firestore na página do dashboard cuidará de atualizar a UI.
+      // A função onMealAdded agora é apenas um placeholder.
       toast({
           title: "Refeição Adicionada! ✅",
           description: "Sua refeição foi registrada com sucesso e aparecerá no seu diário.",

@@ -85,8 +85,16 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     }
 
     const responseData = await response.json();
-    const nestedOutput = JSON.parse(responseData[0].output);
-    const nutritionData = nestedOutput.resultado;
+    
+    let nutritionData;
+    // Handle the nested structure: [{ "output": "{\"resultado\":{...}}" }]
+    if (Array.isArray(responseData) && responseData.length > 0 && responseData[0].output) {
+      const nestedOutput = JSON.parse(responseData[0].output);
+      nutritionData = nestedOutput.resultado;
+    } else {
+      // Fallback for a direct response, just in case
+      nutritionData = responseData.resultado;
+    }
 
     if (!nutritionData) {
       throw new Error('Formato de resposta de nutrição inesperado do webhook.');
