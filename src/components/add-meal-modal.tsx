@@ -66,11 +66,20 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
       const result = await addMealEntry(userId, data);
 
       if (result.error) {
-        throw new Error(result.error);
+        toast({
+            title: "Erro ao adicionar refeição",
+            description: result.error,
+            variant: "destructive"
+        });
+        return;
       }
       
       if (result.mealEntry) {
         onMealAdded(result.mealEntry);
+        toast({
+            title: "Refeição Adicionada! ✅",
+            description: "Sua refeição foi registrada com sucesso.",
+        });
       }
 
       form.reset();
@@ -227,3 +236,5 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
     </Dialog>
   );
 }
+
+    
