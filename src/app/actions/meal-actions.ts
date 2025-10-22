@@ -86,13 +86,23 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     const responseData = await response.json();
     
     if (responseData && responseData.id) {
-        // As a server action, we return the server-side representation, not a client-side one.
-        // The client will receive this data and the use of onSnapshot will handle client-side types.
+        const docRef = db.collection('meal_entries').doc(responseData.id);
+        
+        // Firestore admin SDK uses its own Timestamp object
         const finalMealEntry = {
             ...responseData,
             createdAt: Timestamp.fromDate(new Date(responseData.createdAt)),
         };
-        return { mealEntry: finalMealEntry };
+
+        // We use the admin SDK to write the data, as the webhook only returns it.
+        await docRef.set(finalMealEntry);
+
+        // We return a client-compatible version
+        return { mealEntry: {
+            ...finalMealEntry,
+            createdAt: finalMealEntry.createdAt.toDate().toISOString()
+        }};
+
     } else {
         throw new Error('Formato de resposta do webhook inesperado.');
     }
