@@ -27,7 +27,9 @@ function initializeAdminApp() {
             throw new Error("A chave da conta de serviço do Firebase não foi encontrada nas variáveis de ambiente.");
         }
 
+        // Parse a chave, corrigindo o formato da private_key
         const parsedKey = JSON.parse(serviceAccountKey);
+        parsedKey.private_key = parsedKey.private_key.replace(/\\n/g, '\n');
 
         admin.initializeApp({
             credential: admin.credential.cert(parsedKey),
@@ -51,7 +53,7 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
       return { error: initError };
   }
 
-  const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+  const webhookUrl = process.env.N8N_WEBHOOK_URL;
   if (!webhookUrl) {
     return { error: 'A URL do webhook de nutrição não está configurada.' };
   }
