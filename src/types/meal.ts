@@ -1,8 +1,9 @@
+
 // src/types/meal.ts
 export interface Food {
-  nome: string;
-  porcao: number;
-  unidade: string;
+  name: string;
+  portion: number;
+  unit: string;
   calorias: number;
   proteinas: number;
   carboidratos: number;

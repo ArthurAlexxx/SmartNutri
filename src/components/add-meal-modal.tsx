@@ -1,3 +1,4 @@
+
 // src/components/add-meal-modal.tsx
 'use client';
 
@@ -73,7 +74,16 @@ export default function AddMealModal({ isOpen, onOpenChange, userId }: AddMealMo
       
       // 2. Montar o objeto MealEntry completo com os dados retornados
       const mealData: MealData = {
-        alimentos: data.foods.map(f => ({ ...f, nome: f.name, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
+        alimentos: data.foods.map(f => ({
+          name: f.name,
+          portion: f.portion,
+          unit: f.unit,
+          calorias: 0, 
+          proteinas: 0, 
+          carboidratos: 0, 
+          gorduras: 0, 
+          fibras: 0 
+        })),
         totais: result.totals,
       };
       
