@@ -18,6 +18,7 @@ function initializeAdminApp() {
         }
 
         const parsedKey = JSON.parse(serviceAccountKey);
+        // Garante que a chave privada esteja no formato correto.
         parsedKey.private_key = parsedKey.private_key.replace(/\\n/g, '\n');
 
         admin.initializeApp({
@@ -27,6 +28,7 @@ function initializeAdminApp() {
         return { db: admin.firestore() };
     } catch (error: any) {
         console.error("Falha ao inicializar o Firebase Admin:", error.message);
+        // Retorna um objeto de erro em vez de lançar uma exceção
         return { error: "Falha ao conectar com o serviço de banco de dados." };
     }
 }
@@ -49,6 +51,7 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
 
   const { db, error: initError } = initializeAdminApp();
   if (initError) {
+    // Se a inicialização falhar, retorne o erro.
     return { error: initError };
   }
 
