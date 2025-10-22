@@ -1,3 +1,4 @@
+
 // src/app/actions/tenant-actions.ts
 'use server';
 
@@ -11,21 +12,27 @@ async function initializeAdminApp() {
         throw new Error('A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida.');
     }
 
-    // Corrigir o formato da chave privada para ambientes Vercel/serverless
-    const privateKey = serviceAccountKey.includes('\\n')
-        ? JSON.parse(serviceAccountKey).private_key.replace(/\\n/g, '\n')
-        : JSON.parse(serviceAccountKey).private_key;
-
-    const credential = admin.credential.cert({
-        projectId: JSON.parse(serviceAccountKey).project_id,
-        clientEmail: JSON.parse(serviceAccountKey).client_email,
-        privateKey,
-    });
-
+    // Apenas inicialize se não houver apps existentes
     if (admin.apps.length === 0) {
-        admin.initializeApp({ credential });
+        try {
+            // Analisa a string da chave de serviço
+            const serviceAccount = JSON.parse(serviceAccountKey);
+
+            // Garante que a private_key tenha as quebras de linha corretas
+            if (serviceAccount.private_key && serviceAccount.private_key.includes('\\n')) {
+                serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+            }
+
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+        } catch (error: any) {
+            console.error("Falha ao inicializar o Firebase Admin SDK:", error);
+            throw new Error("Erro de parsing na chave de serviço. Verifique a variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY.");
+        }
     }
 }
+
 
 /**
  * Deleta um tenant e todos os dados associados.
