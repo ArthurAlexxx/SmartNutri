@@ -30,8 +30,8 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
   console.log('[addMealEntry] Info: Usando URL de Webhook de teste.');
 
   try {
-    // Formata o array de comidas para um array de strings, como solicitado.
-    const formattedFoods = data.foods.map(food => `${food.portion}${food.unit} de ${food.name}`);
+    // Formata o array de comidas para uma única string, como solicitado.
+    const formattedFoods = data.foods.map(food => `${food.portion}${food.unit} de ${food.name}`).join(', ');
 
     const payload = {
       action: 'add_meal',
