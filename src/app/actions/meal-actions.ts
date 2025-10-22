@@ -11,26 +11,26 @@ const initializeAdminApp = () => {
     // Check if the admin app is already initialized to avoid re-initialization
     const adminApp = getApps().find(app => app.name === 'admin');
     if (adminApp) {
-        return getFirestore(adminApp);
+        return { db: getFirestore(adminApp), error: null };
     }
 
-    // Get service account credentials from environment variables
     const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (!serviceAccountString) {
-        throw new Error('A chave da conta de serviço do Firebase não está configurada no ambiente.');
+        const errorMessage = 'A chave da conta de serviço do Firebase não está configurada no ambiente.';
+        console.error(errorMessage);
+        return { db: null, error: errorMessage };
     }
     
     try {
         const serviceAccount = JSON.parse(serviceAccountString);
-
-        // Initialize the app with a unique name
         const newAdminApp = initializeApp({
             credential: cert(serviceAccount)
         }, 'admin');
-        
-        return getFirestore(newAdminApp);
+        return { db: getFirestore(newAdminApp), error: null };
     } catch (e: any) {
-        throw new Error(`Erro ao parsear a chave de serviço do Firebase: ${e.message}`);
+        const errorMessage = `Erro ao parsear ou inicializar a chave de serviço do Firebase: ${e.message}`;
+        console.error(errorMessage);
+        return { db: null, error: errorMessage };
     }
 };
 
@@ -50,17 +50,14 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
   if (!userId) {
     return { error: 'Usuário não autenticado.' };
   }
-  
+
   const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
   if (!webhookUrl) {
     return { error: 'A URL do webhook de nutrição não está configurada.' };
   }
 
-  let dbAdmin;
-  try {
-      dbAdmin = initializeAdminApp();
-  } catch (error: any) {
-      console.error("Erro ao inicializar Firebase Admin:", error);
+  const { db: dbAdmin, error: dbError } = initializeAdminApp();
+  if (dbError || !dbAdmin) {
       return { error: 'Falha ao conectar com o serviço de banco de dados.' };
   }
     
@@ -126,7 +123,6 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
       createdAt: Timestamp.now(), // Firestore client-side Timestamp
     };
 
-    // Use dbAdmin (Admin SDK) to write data
     const docRef = await dbAdmin.collection('meal_entries').add(mealEntryData);
 
     const finalMealEntry = { ...mealEntryData, id: docRef.id };
