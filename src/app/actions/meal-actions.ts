@@ -2,49 +2,7 @@
 'use server';
 
 import { getLocalDateString } from '@/lib/date-utils';
-import * as admin from 'firebase-admin';
-import type { MealData, MealEntry } from '@/types/meal';
-import { Timestamp } from 'firebase-admin/firestore';
-
-// Função para inicializar o Firebase Admin SDK, agora com tratamento para a private_key
-function initializeAdminApp() {
-    if (admin.apps.length > 0) {
-        return { adminApp: admin.apps[0], initError: null };
-    }
-
-    try {
-        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-        if (!serviceAccountKey) {
-            throw new Error("A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida.");
-        }
-        
-        let parsedServiceAccount;
-        try {
-            // Tenta analisar diretamente.
-            parsedServiceAccount = JSON.parse(serviceAccountKey);
-        } catch (e) {
-            // Se falhar, assume que é uma string "escapada" e tenta analisar de novo.
-            // Isso é comum em ambientes como Vercel.
-            parsedServiceAccount = JSON.parse(JSON.parse(JSON.stringify(serviceAccountKey)));
-        }
-
-        // Garante que as quebras de linha na chave privada sejam interpretadas corretamente.
-        if (parsedServiceAccount.private_key) {
-            parsedServiceAccount.private_key = parsedServiceAccount.private_key.replace(/\\n/g, '\n');
-        }
-        
-        const adminApp = admin.initializeApp({
-            credential: admin.credential.cert(parsedServiceAccount),
-        });
-
-        return { adminApp, initError: null };
-    } catch (error: any) {
-        console.error("[initializeAdminApp] Erro ao inicializar o Firebase Admin:", error.message);
-        // Retorna uma mensagem de erro mais específica para o problema de parsing.
-        return { adminApp: null, initError: `Erro de parsing na chave de serviço: ${error.message}` };
-    }
-}
-
+import type { Totals } from '@/types/meal';
 
 interface FoodItem {
   name: string;
@@ -57,21 +15,27 @@ interface AddMealFormData {
   foods: FoodItem[];
 }
 
-export async function addMealEntry(userId: string, data: AddMealFormData) {
-    if (!userId) {
-        console.error('[addMealEntry] Falha: ID do usuário não fornecido.');
-        return { error: 'Usuário não autenticado. A autenticação é necessária.' };
-    }
+interface GetNutritionalInfoResult {
+    error?: string;
+    totals?: Totals;
+}
 
-    const { adminApp, initError } = initializeAdminApp();
-    if (initError) {
-        console.error('[addMealEntry] Falha na inicialização do Firebase Admin:', initError);
-        return { error: `Falha ao conectar com o serviço de banco de dados: ${initError}` };
+/**
+ * Esta Server Action tem a ÚNICA responsabilidade de se comunicar com o webhook do n8n
+ * para obter os dados nutricionais de uma refeição. Ela não interage com o banco de dados.
+ * 
+ * @param userId - O ID do usuário (para logs no n8n).
+ * @param data - Os dados da refeição enviados pelo formulário.
+ * @returns Um objeto com os totais nutricionais ou uma mensagem de erro.
+ */
+export async function getNutritionalInfo(userId: string, data: AddMealFormData): Promise<GetNutritionalInfoResult> {
+    if (!userId) {
+        return { error: 'Usuário não autenticado.' };
     }
 
     const webhookUrl = "https://n8n.srv1061126.hstgr.cloud/webhook-test/881ba59f-a34a-43e9-891e-483ec8f7b1ef";
     if (!webhookUrl) {
-        console.error('[addMealEntry] Falha: A URL do webhook não está definida.');
+        console.error('[getNutritionalInfo] Falha: A URL do webhook não está definida.');
         return { error: 'A URL do serviço de nutrição não está configurada corretamente no servidor.' };
     }
 
@@ -94,7 +58,7 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`[addMealEntry] Falha: Webhook retornou um erro ${response.status}. Resposta: ${errorText}`);
+            console.error(`[getNutritionalInfo] Falha: Webhook retornou um erro ${response.status}. Resposta: ${errorText}`);
             throw new Error(`O serviço de nutrição retornou um erro: ${errorText || response.statusText}`);
         }
 
@@ -106,39 +70,25 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
         }
 
         const parsedResult = JSON.parse(nutritionalResultString);
-        const totals = parsedResult.resultado;
+        const webhookTotals = parsedResult.resultado;
 
-        if (!totals) {
+        if (!webhookTotals) {
             throw new Error('O resultado nutricional não foi encontrado na resposta do webhook.');
         }
 
-        const mealData: MealData = {
-            alimentos: data.foods.map(f => ({ ...f, nome: f.name, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
-            totais: {
-                calorias: totals.calorias_kcal,
-                proteinas: totals.proteinas_g,
-                carboidratos: totals.carboidratos_g,
-                gorduras: totals.gorduras_g,
-                fibras: totals.fibras_g || 0,
-            },
+        // Mapeia a resposta do webhook para a estrutura de Totals do nosso app
+        const totals: Totals = {
+            calorias: webhookTotals.calorias_kcal,
+            proteinas: webhookTotals.proteinas_g,
+            carboidratos: webhookTotals.carboidratos_g,
+            gorduras: webhookTotals.gorduras_g,
+            fibras: webhookTotals.fibras_g || 0,
         };
         
-        const newMealEntry: Omit<MealEntry, 'id'> = {
-            userId: userId,
-            date: getLocalDateString(),
-            mealType: data.mealType,
-            mealData: mealData,
-            createdAt: Timestamp.now(),
-        };
-
-        const db = admin.firestore();
-        await db.collection('meal_entries').add(newMealEntry);
-
-        console.log('[addMealEntry] Sucesso: Refeição processada e salva no Firestore.');
-        return { success: true };
+        return { totals };
 
     } catch (error: any) {
-        console.error("[addMealEntry] Falha Crítica na Server Action:", error);
+        console.error("[getNutritionalInfo] Falha Crítica na Server Action:", error);
         return { error: error.message || 'Ocorreu um erro desconhecido ao processar sua refeição.' };
     }
 }

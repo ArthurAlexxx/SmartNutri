@@ -1,6 +1,7 @@
 // src/components/add-meal-modal.tsx
 'use client';
 
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -11,7 +12,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addMealEntry } from '@/app/actions/meal-actions';
+import { getNutritionalInfo } from '@/app/actions/meal-actions';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import type { MealData, MealEntry } from '@/types/meal';
+
 
 const foodItemSchema = z.object({
   name: z.string().min(1, 'O nome do alimento é obrigatório.'),
@@ -29,12 +34,14 @@ type AddMealFormValues = z.infer<typeof formSchema>;
 interface AddMealModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onMealAdded: (meal: any) => void; // A UI será atualizada pelo listener do Firestore.
   userId: string;
 }
 
-export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId }: AddMealModalProps) {
+export default function AddMealModal({ isOpen, onOpenChange, userId }: AddMealModalProps) {
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const form = useForm<AddMealFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,29 +54,61 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
     control: form.control,
     name: 'foods',
   });
-  
-  const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: AddMealFormValues) => {
-    const result = await addMealEntry(userId, data);
+    if (!firestore) {
+      toast({ title: "Erro", description: "O serviço de banco de dados não está disponível.", variant: "destructive" });
+      return;
+    }
 
-    if (result.error) {
-      toast({
-          title: "Erro ao Adicionar Refeição",
-          description: result.error,
-          variant: "destructive"
-      });
-    } else if (result.success) {
-      // O listener do Firestore na página do dashboard cuidará de atualizar a UI.
+    setIsProcessing(true);
+    
+    try {
+      // 1. Chamar a Server Action para obter os dados nutricionais do n8n
+      const result = await getNutritionalInfo(userId, data);
+      
+      if (result.error || !result.totals) {
+        throw new Error(result.error || "Não foi possível calcular os dados nutricionais.");
+      }
+      
+      // 2. Montar o objeto MealEntry completo com os dados retornados
+      const mealData: MealData = {
+        alimentos: data.foods.map(f => ({ ...f, nome: f.name, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
+        totais: result.totals,
+      };
+      
+      const newMealEntry: Omit<MealEntry, 'id'> = {
+        userId: userId,
+        date: new Intl.DateTimeFormat('sv-SE').format(new Date()), // YYYY-MM-DD
+        mealType: data.mealType,
+        mealData: mealData,
+        createdAt: serverTimestamp(),
+      };
+
+      // 3. Salvar o objeto completo no Firestore do lado do cliente
+      const mealEntriesRef = collection(firestore, 'meal_entries');
+      await addDoc(mealEntriesRef, newMealEntry);
+
+      // 4. Sucesso!
       toast({
           title: "Refeição Adicionada! ✅",
-          description: "Sua refeição foi registrada com sucesso e aparecerá no seu diário.",
+          description: "Sua refeição foi registrada com sucesso.",
       });
       form.reset({
         mealType: '',
         foods: [{ name: '', portion: 100, unit: 'g' }],
       });
       onOpenChange(false);
+
+    } catch (error: any) {
+      console.error("Erro ao adicionar refeição:", error);
+      toast({
+        title: "Erro ao Adicionar Refeição",
+        description: error.message || "Ocorreu um erro desconhecido.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -79,7 +118,7 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Adicionar Nova Refeição</DialogTitle>
           <DialogDescription>
-            Adicione os alimentos da sua refeição. Você pode incluir múltiplos alimentos (ex: peito de frango + arroz).
+            Descreva os alimentos da sua refeição para obter a análise nutricional.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -200,8 +239,8 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                 {isSubmitting ? (
+              <Button type="submit" disabled={isProcessing}>
+                 {isProcessing ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Plus className="mr-2 h-4 w-4" />

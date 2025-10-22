@@ -11,7 +11,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { cn } from '@/lib/utils';
 import type { User } from 'firebase/auth';
 import type { UserProfile } from '@/types/user';
-import type { MealEntry } from '@/types/meal';
 import DashboardHeader from './dashboard-header';
 import { Separator } from './ui/separator';
 import type { SiteConfig } from '@/lib/site-config-schema';
@@ -24,7 +23,6 @@ import { SiteConfigContext } from '@/context/site-config-context';
 interface AppLayoutProps {
   user: User | null;
   userProfile: UserProfile | null;
-  onMealAdded: (meal: MealEntry) => void;
   onProfileUpdate: (updatedProfile: Partial<UserProfile>) => void;
   children: React.ReactNode;
 }
@@ -100,7 +98,7 @@ const LogoDisplay = ({ logo, siteName }: { logo: SiteConfig['logo']; siteName: s
 };
 
 
-export default function AppLayout({ user, userProfile, onMealAdded, onProfileUpdate, children }: AppLayoutProps) {
+export default function AppLayout({ user, userProfile, onProfileUpdate, children }: AppLayoutProps) {
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const siteConfig = useContext(SiteConfigContext);
@@ -241,7 +239,6 @@ export default function AppLayout({ user, userProfile, onMealAdded, onProfileUpd
             <DashboardHeader
                 user={user}
                 userProfile={userProfile}
-                onMealAdded={onMealAdded}
                 onProfileUpdate={onProfileUpdate}
             />
         </header>

@@ -26,13 +26,12 @@ import AddMealModal from '@/components/add-meal-modal';
 
 export default function DashboardPage() {
   const db = useFirestore();
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const router = useRouter();
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
   const [hydrationEntries, setHydrationEntries] = useState<HydrationEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const { toast } = useToast();
   
@@ -45,39 +44,30 @@ export default function DashboardPage() {
       router.push('/login');
       return;
     }
+    
+    // We can show the page as soon as the userProfile is available
+    if (userProfile !== undefined) {
+      setLoading(false);
+    }
 
-    let unsubProfile: Unsubscribe | undefined;
     let unsubRoom: Unsubscribe | undefined;
     let unsubMeals: Unsubscribe | undefined;
     let unsubHydration: Unsubscribe | undefined;
 
     if (db) {
-      const userRef = doc(db, 'users', user.uid);
-      unsubProfile = onSnapshot(userRef, (userDoc) => {
-        if (userDoc.exists()) {
-          const profileData = { id: userDoc.id, ...userDoc.data() } as UserProfile;
-          setUserProfile(profileData);
-          setLoading(false);
-          
-          if (profileData.patientRoomId) {
-            const roomRef = doc(db, 'rooms', profileData.patientRoomId);
-            unsubRoom = onSnapshot(roomRef, (roomDoc) => {
-              if (roomDoc.exists()) {
-                setRoom({ id: roomDoc.id, ...roomDoc.data() } as Room);
-              } else {
-                setRoom(null);
-              }
-            });
-          } else {
-             setRoom(null);
-             if (unsubRoom) unsubRoom();
-          }
-
-        } else {
-          setLoading(false);
-          console.error("User profile not found in Firestore.");
-        }
-      });
+      // The userProfile is now coming from the useUser hook, so no need for a separate listener here.
+      if (userProfile?.patientRoomId) {
+          const roomRef = doc(db, 'rooms', userProfile.patientRoomId);
+          unsubRoom = onSnapshot(roomRef, (roomDoc) => {
+            if (roomDoc.exists()) {
+              setRoom({ id: roomDoc.id, ...roomDoc.data() } as Room);
+            } else {
+              setRoom(null);
+            }
+          });
+      } else {
+          setRoom(null);
+      }
 
       const mealsQuery = query(collection(db, 'meal_entries'), where('userId', '==', user.uid));
       unsubMeals = onSnapshot(mealsQuery, (snapshot) => {
@@ -90,25 +80,15 @@ export default function DashboardPage() {
         const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HydrationEntry));
         setHydrationEntries(entries);
       });
-
     }
 
     return () => {
-      if (unsubProfile) unsubProfile();
       if (unsubRoom) unsubRoom();
       if (unsubMeals) unsubMeals();
       if (unsubHydration) unsubHydration();
     };
 
-  }, [user, isUserLoading, router, db]);
-
-  const handleMealAdded = useCallback((newMeal: MealEntry) => {
-    setMealEntries(prev => [...prev, newMeal]);
-    toast({
-        title: 'Refeição Adicionada! ✅',
-        description: 'Sua refeição foi registrada com sucesso.',
-    });
-  }, [toast]);
+  }, [user, userProfile, isUserLoading, router, db]);
 
   const handleMealDeleted = useCallback(async (entryId: string) => {
     if (!db) return;
@@ -129,26 +109,30 @@ export default function DashboardPage() {
   }, [db, toast]);
 
   const handleMealUpdate = useCallback(async (updatedMeal: MealEntry) => {
-    if (!db) return;
-     toast({ title: "Funcionalidade desativada", description: "A edição de refeições está temporariamente desativada.", variant: "destructive" });
+    if (!db || !updatedMeal.id) return;
+    try {
+        const mealRef = doc(db, 'meal_entries', updatedMeal.id);
+        await updateDoc(mealRef, {
+            mealData: updatedMeal.mealData
+        });
+        toast({
+            title: "Refeição Atualizada",
+            description: "Os valores da sua refeição foram atualizados.",
+        });
+        setEditingMeal(null);
+    } catch(e) {
+        console.error("Error updating meal:", e);
+        toast({ title: "Erro", description: "Não foi possível atualizar a refeição.", variant: "destructive" });
+    }
   }, [db, toast]);
 
-  const handleProfileUpdate = useCallback((updatedProfile: Partial<UserProfile>) => {
-    if (!user || !db) return;
-    const userRef = doc(db, 'users', user.uid);
-    updateDoc(userRef, updatedProfile).then(() => {
-      toast({
-        title: "Perfil Atualizado!",
-        description: "Suas informações foram salvas.",
-      });
-    }).catch(error => {
-       toast({
-        title: "Erro ao Atualizar",
-        description: "Não foi possível salvar suas informações.",
-        variant: "destructive",
-      });
+  const handleProfileUpdate = useCallback(() => {
+    // This is now handled by the useUser hook globally
+    toast({
+      title: "Perfil Atualizado!",
+      description: "Suas informações foram salvas.",
     });
-  }, [user, db, toast]);
+  }, [toast]);
   
   const waterGoal = useMemo(() => room?.activePlan?.hydrationGoal || userProfile?.waterGoal || 2000, [room, userProfile]);
 
@@ -189,7 +173,7 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background items-center justify-center">
          <Loader2 className="h-16 w-16 animate-spin text-primary" />
-         <p className="mt-4 text-muted-foreground">Carregando dados...</p>
+         <p className="mt-4 text-muted-foreground">Carregando seu diário...</p>
       </div>
     );
   }
@@ -198,7 +182,6 @@ export default function DashboardPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={handleMealAdded}
         onProfileUpdate={handleProfileUpdate}
     >
         <div className="flex flex-col gap-8">
@@ -251,8 +234,7 @@ export default function DashboardPage() {
         {user && 
           <AddMealModal 
               isOpen={isAddMealModalOpen} 
-              onOpenChange={setAddMealModalOpen} 
-              onMealAdded={handleMealAdded} 
+              onOpenChange={setAddMealModalOpen}
               userId={user.uid} 
           />
         }
