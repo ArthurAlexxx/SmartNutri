@@ -70,11 +70,8 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
           variant: "destructive"
       });
     } else if (result.mealEntry) {
-      // The `onMealAdded` prop expects a client-side object, but the server action
-      // returns a server-side object (with admin SDK Timestamp).
-      // We can create a client-compatible version here, but it's better
-      // to rely on the real-time listener in the dashboard to add the new meal to the UI.
-      // onMealAdded(result.mealEntry);
+      // O listener do Firestore na página do dashboard cuidará de atualizar a UI.
+      // onMealAdded(result.mealEntry); // Desativado para evitar duplicatas.
       
       toast({
           title: "Refeição Adicionada! ✅",
