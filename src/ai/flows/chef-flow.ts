@@ -58,10 +58,10 @@ const flow = ai.defineFlow(
     outputSchema: ChefFlowOutputSchema,
   },
   async ({ prompt, userId }) => {
-    const webhookUrl = process.env.N8N_WEBHOOK_URL;
+    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     
     if (!webhookUrl) {
-      console.error('N8N_WEBHOOK_URL is not set in environment variables.');
+      console.error('NEXT_PUBLIC_N8N_WEBHOOK_URL is not set in environment variables.');
       return { text: 'Desculpe, o serviço de chef virtual não está configurado corretamente.' };
     }
 

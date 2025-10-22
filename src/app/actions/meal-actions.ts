@@ -1,3 +1,4 @@
+
 // src/app/actions/meal-actions.ts
 'use server';
 
@@ -20,9 +21,9 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     return { error: 'Usuário não autenticado. A autenticação é necessária.' };
   }
 
-  const webhookUrl = process.env.N8N_WEBHOOK_URL;
+  const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
   if (!webhookUrl) {
-    console.error('[addMealEntry] Falha: A variável de ambiente N8N_WEBHOOK_URL não está configurada no servidor.');
+    console.error('[addMealEntry] Falha: A variável de ambiente NEXT_PUBLIC_N8N_WEBHOOK_URL não está configurada no servidor.');
     return { error: 'A URL do serviço de nutrição não está configurada corretamente no servidor.' };
   }
   console.log('[addMealEntry] Info: URL do Webhook encontrada.');
