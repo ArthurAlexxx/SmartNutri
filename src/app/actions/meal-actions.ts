@@ -1,11 +1,35 @@
-
 // src/app/actions/meal-actions.ts
 'use server';
 
 import { getLocalDateString } from '@/lib/date-utils';
-import { admin, initializeAdminApp } from '@/lib/firebase/admin';
+import * as admin from 'firebase-admin';
 import type { MealData, MealEntry } from '@/types/meal';
 import { Timestamp } from 'firebase-admin/firestore';
+
+// Função para inicializar o Firebase Admin SDK movida para cá
+function initializeAdminApp() {
+    if (admin.apps.length > 0) {
+        return { adminApp: admin.apps[0], initError: null };
+    }
+
+    try {
+        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (!serviceAccountKey) {
+            throw new Error("A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida.");
+        }
+
+        const parsedServiceAccount = JSON.parse(serviceAccountKey);
+        
+        const adminApp = admin.initializeApp({
+            credential: admin.credential.cert(parsedServiceAccount),
+        });
+
+        return { adminApp, initError: null };
+    } catch (error: any) {
+        return { adminApp: null, initError: error.message };
+    }
+}
+
 
 interface FoodItem {
   name: string;

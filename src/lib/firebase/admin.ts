@@ -1,31 +1,8 @@
-
 // src/lib/firebase/admin.ts
 import * as admin from 'firebase-admin';
 
-// Função para inicializar o Firebase Admin SDK
-export function initializeAdminApp() {
-    if (admin.apps.length > 0) {
-        return { adminApp: admin.apps[0], initError: null };
-    }
-
-    try {
-        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-        if (!serviceAccountKey) {
-            throw new Error("A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida.");
-        }
-
-        // Substituir \\n por \n na chave privada
-        const parsedServiceAccount = JSON.parse(serviceAccountKey);
-        parsedServiceAccount.private_key = parsedServiceAccount.private_key.replace(/\\n/g, '\n');
-
-        const adminApp = admin.initializeApp({
-            credential: admin.credential.cert(parsedServiceAccount),
-        });
-
-        return { adminApp, initError: null };
-    } catch (error: any) {
-        return { adminApp: null, initError: error.message };
-    }
-}
+// A inicialização agora é feita diretamente na Server Action para garantir o acesso
+// às variáveis de ambiente no ambiente serverless da Vercel.
+// Este arquivo é mantido para exportar a instância do admin, caso seja usada em outros locais no futuro.
 
 export { admin };
