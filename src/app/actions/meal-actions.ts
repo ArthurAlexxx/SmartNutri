@@ -33,7 +33,7 @@ export async function getNutritionalInfo(userId: string, data: AddMealFormData):
         return { error: 'Usuário não autenticado.' };
     }
 
-    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+    const webhookUrl = 'https://n8n.srv1061126.hstgr.cloud/webhook-test/881ba59f-a34a-43e9-891e-483ec8f7b1ef';
     if (!webhookUrl) {
         console.error('[getNutritionalInfo] Falha: A URL do webhook não está definida.');
         return { error: 'A URL do serviço de nutrição não está configurada corretamente no servidor.' };
