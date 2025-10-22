@@ -1,4 +1,3 @@
-
 // src/components/add-meal-modal.tsx
 'use client';
 
@@ -62,35 +61,27 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
       return;
     }
 
-    try {
-      const result = await addMealEntry(userId, data);
+    const result = await addMealEntry(userId, data);
 
-      if (result.error) {
-        toast({
-            title: "Erro ao adicionar refeição",
-            description: result.error,
-            variant: "destructive"
-        });
-        return;
-      }
+    if (result.error) {
+      toast({
+          title: "Erro ao Adicionar Refeição",
+          description: result.error,
+          variant: "destructive"
+      });
+    } else if (result.mealEntry) {
+      // The `onMealAdded` prop expects a client-side object, but the server action
+      // returns a server-side object (with admin SDK Timestamp).
+      // We can create a client-compatible version here, but it's better
+      // to rely on the real-time listener in the dashboard to add the new meal to the UI.
+      // onMealAdded(result.mealEntry);
       
-      if (result.mealEntry) {
-        onMealAdded(result.mealEntry);
-        toast({
-            title: "Refeição Adicionada! ✅",
-            description: "Sua refeição foi registrada com sucesso.",
-        });
-      }
-
+      toast({
+          title: "Refeição Adicionada! ✅",
+          description: "Sua refeição foi registrada com sucesso e aparecerá no seu diário.",
+      });
       form.reset();
       onOpenChange(false);
-    } catch(error: any) {
-       console.error("Failed to submit meal", error);
-        toast({
-            title: "Erro ao adicionar refeição",
-            description: error.message || "Não foi possível processar sua refeição. Tente novamente.",
-            variant: "destructive"
-        });
     }
   };
 
@@ -236,5 +227,3 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
     </Dialog>
   );
 }
-
-    

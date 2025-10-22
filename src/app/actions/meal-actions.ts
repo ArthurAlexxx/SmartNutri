@@ -1,8 +1,9 @@
-
+// src/app/actions/meal-actions.ts
 'use server';
 
+import * as admin from 'firebase-admin';
 import { getLocalDateString } from '@/lib/date-utils';
-import { Timestamp } from 'firebase/firestore'; // Note: This is from the CLIENT SDK
+import { Timestamp } from 'firebase-admin/firestore';
 
 interface FoodItem {
   name: string;
@@ -15,12 +16,42 @@ interface AddMealFormData {
   foods: FoodItem[];
 }
 
+function initializeAdminApp() {
+    try {
+        if (admin.apps.length > 0) {
+            return { db: admin.firestore() };
+        }
+
+        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (!serviceAccountKey) {
+            throw new Error("A chave da conta de serviço do Firebase não foi encontrada nas variáveis de ambiente.");
+        }
+
+        const parsedKey = JSON.parse(serviceAccountKey);
+
+        admin.initializeApp({
+            credential: admin.credential.cert(parsedKey),
+        });
+
+        return { db: admin.firestore() };
+    } catch (error: any) {
+        console.error("Falha ao inicializar o Firebase Admin:", error.message);
+        return { error: "Falha ao conectar com o serviço de banco de dados." };
+    }
+}
+
+
 export async function addMealEntry(userId: string, data: AddMealFormData) {
   if (!userId) {
     return { error: 'Usuário não autenticado.' };
   }
 
-  const webhookUrl = process.env.N8N_WEBHOOK_URL;
+  const { db, error: initError } = initializeAdminApp();
+  if (initError) {
+      return { error: initError };
+  }
+
+  const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
   if (!webhookUrl) {
     return { error: 'A URL do webhook de nutrição não está configurada.' };
   }
@@ -37,7 +68,7 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
       mealType: data.mealType,
       date: getLocalDateString(),
       foods: data.foods,
-      createdAt: new Date().toISOString(), // Send as ISO string
+      createdAt: new Date().toISOString(),
     };
 
     const response = await fetch(webhookUrl, {
@@ -54,9 +85,9 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
 
     const responseData = await response.json();
     
-    // The webhook now returns the created document directly
     if (responseData && responseData.id) {
-        // Convert server timestamp fields back to client-side Timestamp objects
+        // As a server action, we return the server-side representation, not a client-side one.
+        // The client will receive this data and the use of onSnapshot will handle client-side types.
         const finalMealEntry = {
             ...responseData,
             createdAt: Timestamp.fromDate(new Date(responseData.createdAt)),
@@ -71,5 +102,3 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     return { error: error.message || 'Ocorreu um erro desconhecido ao contatar o serviço de nutrição.' };
   }
 }
-
-    
