@@ -21,12 +21,14 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     return { error: 'Usuário não autenticado. A autenticação é necessária.' };
   }
 
-  const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+  // URL de teste fixada temporariamente para depuração
+  const webhookUrl = "https://n8n.srv1061126.hstgr.cloud/webhook-test/881ba59f-a34a-43e9-891e-483ec8f7b1ef";
+  
   if (!webhookUrl) {
-    console.error('[addMealEntry] Falha: A variável de ambiente NEXT_PUBLIC_N8N_WEBHOOK_URL não está configurada no servidor.');
+    console.error('[addMealEntry] Falha: A URL do webhook não está definida.');
     return { error: 'A URL do serviço de nutrição não está configurada corretamente no servidor.' };
   }
-  console.log('[addMealEntry] Info: URL do Webhook encontrada.');
+  console.log('[addMealEntry] Info: Usando URL de Webhook de teste.');
 
   try {
     const payload = {
