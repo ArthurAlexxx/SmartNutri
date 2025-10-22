@@ -73,7 +73,7 @@ export default function ConsumedFoodsList({ mealEntries, onMealDeleted, onMealEd
     return mealEntries.filter(entry => {
       const searchMatch = searchTerm === '' || 
                           entry.mealData.alimentos.some(food => 
-                            food.nome.toLowerCase().includes(searchTerm.toLowerCase())
+                            food.name.toLowerCase().includes(searchTerm.toLowerCase())
                           );
       const categoryMatch = activeCategories.includes(entry.mealType);
       return searchMatch && categoryMatch;
@@ -167,7 +167,7 @@ export default function ConsumedFoodsList({ mealEntries, onMealDeleted, onMealEd
                   
                   <div className="mb-4">
                     <p className="text-sm text-muted-foreground">
-                        {entry.mealData.alimentos.map(f => `${f.porcao}${f.unidade} de ${f.nome}`).join(', ')}
+                        {entry.mealData.alimentos.map(f => `${f.portion}${f.unit} de ${f.name}`).join(', ')}
                     </p>
                   </div>
 
