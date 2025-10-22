@@ -52,9 +52,9 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
 
   // A inicialização agora acontece dentro da action
   const { db, error: initError } = initializeAdminApp();
-  if (initError) {
+  if (initError || !db) {
     // Se a inicialização falhar, retorne o erro.
-    return { error: initError };
+    return { error: initError || "Falha ao conectar com o serviço de banco de dados." };
   }
 
   const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
