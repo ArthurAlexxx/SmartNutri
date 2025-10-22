@@ -1,11 +1,11 @@
-
+// src/app/firebase/provider.tsx
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, onSnapshot } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { FirebaseErrorListener } from '@/components/firebase-error-listener';
 import type { UserProfile } from '@/types/user';
 
 interface FirebaseProviderProps {
@@ -71,49 +71,45 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
-    if (!auth || !firestore) { // If no Auth service instance, cannot determine user state
-      setUserAuthState({ user: null, userProfile: null, isUserLoading: false, userError: new Error("Auth or Firestore service not provided.") });
-      return;
+    if (!auth) {
+        setUserAuthState({ user: null, userProfile: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
+        return;
     }
 
-    setUserAuthState(prevState => ({ ...prevState, isUserLoading: true }));
-
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => { // Auth state determined
-        if (firebaseUser) {
-            // User is logged in, now fetch their profile.
-            // The user's profile is always in the top-level 'users' collection.
-            const userRef = doc(firestore, 'users', firebaseUser.uid);
-            
-            const unsubProfile = onSnapshot(userRef, (profileDoc) => {
-                if(profileDoc.exists()) {
-                     const profileData = { id: profileDoc.id, ...profileDoc.data() } as UserProfile;
-                     setUserAuthState({ user: firebaseUser, userProfile: profileData, isUserLoading: false, userError: null });
-                } else {
-                    // Profile might not be created yet, e.g., during registration.
-                    // This state is temporary until the profile is created.
-                    setUserAuthState({ user: firebaseUser, userProfile: null, isUserLoading: false, userError: null });
-                }
-            }, (error) => {
-                 console.error("FirebaseProvider: onSnapshot profile error:", error);
-                 setUserAuthState({ user: firebaseUser, userProfile: null, isUserLoading: false, userError: error });
-            });
-
-            return () => unsubProfile();
-
-        } else {
-            // User is logged out
-            setUserAuthState({ user: null, userProfile: null, isUserLoading: false, userError: null });
-        }
-      },
-      (error) => { // Auth listener error
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+        setUserAuthState(prevState => ({ ...prevState, user: firebaseUser, isUserLoading: false, userError: null }));
+    }, (error) => {
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
         setUserAuthState({ user: null, userProfile: null, isUserLoading: false, userError: error });
-      }
-    );
-    return () => unsubscribe(); // Cleanup
-  }, [auth, firestore]); // Depends on the auth and firestore instances
+    });
+
+    return () => unsubscribeAuth();
+  }, [auth]);
+  
+  // Effect to fetch user profile when user is authenticated
+  useEffect(() => {
+    if (userAuthState.user && firestore) {
+        const userRef = doc(firestore, 'users', userAuthState.user.uid);
+        const unsubscribeProfile = onSnapshot(userRef, 
+            (profileDoc) => {
+                if (profileDoc.exists()) {
+                    const profileData = { id: profileDoc.id, ...profileDoc.data() } as UserProfile;
+                    setUserAuthState(prevState => ({ ...prevState, userProfile: profileData }));
+                } else {
+                    setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
+                }
+            }, 
+            (error) => {
+                console.error("FirebaseProvider: onSnapshot profile error:", error);
+                setUserAuthState(prevState => ({ ...prevState, userProfile: null, userError: error }));
+            }
+        );
+        return () => unsubscribeProfile();
+    } else {
+        // When user logs out, clear the profile
+        setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
+    }
+  }, [userAuthState.user, firestore]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
@@ -194,7 +190,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 /**
  * Hook specifically for accessing the authenticated user's state.
  * This provides the User object, loading status, and any auth errors.
- * @returns {UserHookResult} Object with user, isUserLoading, userError.
+ * @returns {UserHookResult} Object with user, userProfile, isUserLoading, userError.
  */
 export const useUser = (): UserHookResult => {
   const { user, userProfile, isUserLoading, userError } = useFirebaseContext();
