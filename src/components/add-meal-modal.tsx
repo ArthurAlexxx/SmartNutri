@@ -30,7 +30,7 @@ type AddMealFormValues = z.infer<typeof formSchema>;
 interface AddMealModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onMealAdded: (mealEntry: MealEntry) => void;
+  onMealAdded: (mealEntry: MealEntry) => void; // Mantido para possível uso futuro, mas não será chamado
   userId: string | null;
 }
 
@@ -69,15 +69,16 @@ export default function AddMealModal({ isOpen, onOpenChange, onMealAdded, userId
           description: result.error,
           variant: "destructive"
       });
-    } else if (result.mealEntry) {
+    } else if (result.success) {
       // O listener do Firestore na página do dashboard cuidará de atualizar a UI.
-      // onMealAdded(result.mealEntry); // Desativado para evitar duplicatas.
-      
       toast({
           title: "Refeição Adicionada! ✅",
           description: "Sua refeição foi registrada com sucesso e aparecerá no seu diário.",
       });
-      form.reset();
+      form.reset({
+        mealType: '',
+        foods: [{ name: '', portion: 0, unit: 'g' }],
+      });
       onOpenChange(false);
     }
   };

@@ -1,9 +1,35 @@
-
 // src/app/actions/meal-actions.ts
 'use server';
 
 import { getLocalDateString } from '@/lib/date-utils';
 import { v4 as uuidv4 } from 'uuid';
+import * as admin from 'firebase-admin';
+
+// Função para inicializar o Firebase Admin SDK de forma segura
+function initializeAdminApp() {
+    try {
+        if (admin.apps.length > 0) {
+            return { db: admin.firestore() };
+        }
+        
+        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (!serviceAccountKey) {
+            throw new Error("A chave da conta de serviço do Firebase não foi encontrada nas variáveis de ambiente.");
+        }
+
+        const parsedKey = JSON.parse(serviceAccountKey);
+        parsedKey.private_key = parsedKey.private_key.replace(/\\n/g, '\n');
+
+        admin.initializeApp({
+            credential: admin.credential.cert(parsedKey),
+        });
+        
+        return { db: admin.firestore() };
+    } catch (error: any) {
+        console.error("Falha ao inicializar o Firebase Admin:", error.message);
+        return { error: "Falha ao conectar com o serviço de banco de dados." };
+    }
+}
 
 interface FoodItem {
   name: string;
@@ -19,6 +45,11 @@ interface AddMealFormData {
 export async function addMealEntry(userId: string, data: AddMealFormData) {
   if (!userId) {
     return { error: 'Usuário não autenticado.' };
+  }
+
+  const { db, error: initError } = initializeAdminApp();
+  if (initError) {
+    return { error: initError };
   }
 
   const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
@@ -49,8 +80,6 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
     }
 
     const responseData = await response.json();
-
-    // Extrai o JSON aninhado da resposta do webhook
     const nestedOutput = JSON.parse(responseData[0].output);
     const nutritionData = nestedOutput.resultado;
 
@@ -58,14 +87,13 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
       throw new Error('Formato de resposta de nutrição inesperado do webhook.');
     }
 
-    // Cria o objeto mealEntry completo para retornar ao cliente.
-    // O n8n ainda será responsável por salvar isso no Firestore.
+    const mealId = uuidv4();
     const mealEntry = {
-      id: uuidv4(),
+      id: mealId,
       userId: userId,
       date: getLocalDateString(),
       mealType: data.mealType,
-      createdAt: new Date().toISOString(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
       mealData: {
         alimentos: data.foods.map(f => ({ ...f, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
         totais: {
@@ -78,10 +106,11 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
       },
     };
     
-    // Opcional: Enviar o objeto formatado de volta para o n8n para salvamento, se necessário.
-    // Isso depende da lógica do seu webhook. Por agora, apenas retornamos para a UI.
+    // Salva a refeição no Firestore
+    const mealRef = db.collection('meal_entries').doc(mealId);
+    await mealRef.set(mealEntry);
 
-    return { mealEntry };
+    return { success: true };
 
   } catch (error: any) {
     console.error("Error in addMealEntry server action:", error);
