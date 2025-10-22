@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
 import type { MealData, MealEntry } from '@/types/meal';
 import { Timestamp } from 'firebase-admin/firestore';
 
-// Função para inicializar o Firebase Admin SDK movida para cá
+// Função para inicializar o Firebase Admin SDK, agora com tratamento para a private_key
 function initializeAdminApp() {
     if (admin.apps.length > 0) {
         return { adminApp: admin.apps[0], initError: null };
@@ -20,13 +20,20 @@ function initializeAdminApp() {
 
         const parsedServiceAccount = JSON.parse(serviceAccountKey);
         
+        // **A CORREÇÃO DEFINITIVA ESTÁ AQUI**
+        // Garante que as quebras de linha na chave privada sejam interpretadas corretamente.
+        if (parsedServiceAccount.private_key) {
+            parsedServiceAccount.private_key = parsedServiceAccount.private_key.replace(/\\n/g, '\n');
+        }
+        
         const adminApp = admin.initializeApp({
             credential: admin.credential.cert(parsedServiceAccount),
         });
 
         return { adminApp, initError: null };
     } catch (error: any) {
-        return { adminApp: null, initError: error.message };
+        console.error("[initializeAdminApp] Erro ao inicializar o Firebase Admin:", error.message);
+        return { adminApp: null, initError: `Erro de parsing na chave de serviço: ${error.message}` };
     }
 }
 
@@ -48,7 +55,7 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
         return { error: 'Usuário não autenticado. A autenticação é necessária.' };
     }
 
-    const { initError } = initializeAdminApp();
+    const { adminApp, initError } = initializeAdminApp();
     if (initError) {
         console.error('[addMealEntry] Falha na inicialização do Firebase Admin:', initError);
         return { error: `Falha ao conectar com o serviço de banco de dados: ${initError}` };
@@ -85,7 +92,6 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
 
         const webhookResponse = await response.json();
 
-        // Extrai e parseia o resultado nutricional da resposta do n8n
         const nutritionalResultString = webhookResponse[0]?.output;
         if (!nutritionalResultString) {
             throw new Error('A resposta do webhook não contém o campo "output" esperado.');
@@ -98,15 +104,14 @@ export async function addMealEntry(userId: string, data: AddMealFormData) {
             throw new Error('O resultado nutricional não foi encontrado na resposta do webhook.');
         }
 
-        // Constrói o objeto da refeição para salvar no Firestore
         const mealData: MealData = {
-            alimentos: data.foods.map(f => ({ ...f, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
+            alimentos: data.foods.map(f => ({ ...f, nome: f.name, calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0 })),
             totais: {
                 calorias: totals.calorias_kcal,
                 proteinas: totals.proteinas_g,
                 carboidratos: totals.carboidratos_g,
                 gorduras: totals.gorduras_g,
-                fibras: totals.fibras_g,
+                fibras: totals.fibras_g || 0,
             },
         };
         
