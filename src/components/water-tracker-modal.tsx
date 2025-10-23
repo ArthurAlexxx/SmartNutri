@@ -1,4 +1,3 @@
-
 // src/components/water-tracker-modal.tsx
 'use client';
 
@@ -6,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from './ui/button';
 import { Minus, Plus, GlassWater } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface WaterTrackerModalProps {
   isOpen: boolean;
@@ -60,13 +60,16 @@ export default function WaterTrackerModal({ isOpen, onOpenChange, waterIntake, w
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center text-center py-8 gap-4">
-            <div 
-            className="relative w-24 h-40 mb-4 flex flex-col-reverse rounded-t-xl border-b-4 border-gray-300"
-            style={{ background: `linear-gradient(to top, hsl(var(--chart-2)) ${progress}%, hsl(var(--muted)) ${progress}%)` } as React.CSSProperties}
+            <div
+                className="relative w-28 h-44 bg-muted rounded-t-2xl rounded-b-lg border-x-4 border-t-4 border-gray-300/70 overflow-hidden flex flex-col-reverse"
             >
-            <div className="flex items-center justify-center h-full">
-                <GlassWater className="w-10 h-10 text-white/50" />
-            </div>
+                <div 
+                    className="w-full bg-blue-400 transition-all duration-500"
+                    style={{ height: `${progress}%` }}
+                ></div>
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <GlassWater className="w-12 h-12 text-gray-400/30" />
+                </div>
             </div>
 
             <p className="text-4xl font-bold text-foreground">
