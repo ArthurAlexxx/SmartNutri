@@ -69,7 +69,7 @@ export default function Home() {
       <Header siteConfig={config} />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative flex items-center min-h-[calc(100vh-80px)] py-16 md:py-24 bg-background">
+        <section className="relative flex items-center min-h-[calc(80vh-80px)] md:min-h-[calc(100vh-80px)] py-16 md:py-24 bg-background">
           <div className="container z-10 px-4 md:px-6">
             <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
               <div className="flex flex-col justify-center space-y-8 text-center lg:text-left">
@@ -83,7 +83,7 @@ export default function Home() {
                 <p className="mx-auto max-w-[600px] text-lg text-muted-foreground md:text-xl lg:mx-0 mt-6">
                   {config.heroSection.subtitle}
                 </p>
-                <div className="flex flex-col gap-4 min-[400px]:flex-row mx-auto lg:mx-0">
+                <div className="flex flex-col gap-4 min-[400px]:flex-row mx-auto lg:mx-0 justify-center lg:justify-start">
                    <Button asChild size="lg" className="h-14 px-12 text-xl transition-all duration-300 transform shadow-lg rounded-full shadow-primary/30 hover:scale-105">
                      <Link href="/register">
                         {config.heroSection.cta}
@@ -92,7 +92,7 @@ export default function Home() {
                    </Button>
                 </div>
               </div>
-               <div className="relative h-[250px] sm:h-[400px] lg:h-[500px] w-full animate-fade-in" style={{animationDelay: '150ms'}}>
+               <div className="hidden lg:block relative h-[500px] w-full animate-fade-in" style={{animationDelay: '150ms'}}>
                     {config.heroSection.imageUrl && (
                       <Image
                         src={config.heroSection.imageUrl}
@@ -110,7 +110,7 @@ export default function Home() {
            <section id="about-pro" className="w-full py-20 lg:py-24 bg-secondary border-y">
                 <div className="container px-4 md:px-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 items-center">
-                        <div className="md:col-span-1 animate-fade-in">
+                        <div className="md:col-span-1 animate-fade-in text-center md:text-left">
                             {config.professionalProfileSection.imageUrl && (
                                 <Image
                                     src={config.professionalProfileSection.imageUrl}
@@ -157,11 +157,13 @@ export default function Home() {
                             <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed mx-auto lg:mx-0">
                             {config.ctaSection.subtitle}
                             </p>
-                            <Button asChild size="lg" disabled>
-                                <Link href="#">
-                                    {config.ctaSection.cta} <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
+                            <div className='flex justify-center lg:justify-start'>
+                                <Button asChild size="lg" disabled>
+                                    <Link href="#">
+                                        {config.ctaSection.cta} <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
                         <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
                             {config.ctaSection.imageUrl && (
@@ -260,12 +262,14 @@ export default function Home() {
                   <p className="text-lg text-muted-foreground md:text-xl">
                       {config.finalCtaSection.subtitle}
                   </p>
-                  <Button asChild size="lg" className="h-14 px-12 text-lg transition-transform duration-300 transform rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105">
-                      <Link href="/register">
-                          {config.finalCtaSection.cta}
-                          <ArrowRight className="ml-2 h-5 w-5" />
-                      </Link>
-                  </Button>
+                  <div className='flex justify-center'>
+                    <Button asChild size="lg" className="h-14 px-12 text-lg transition-transform duration-300 transform rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105">
+                        <Link href="/register">
+                            {config.finalCtaSection.cta}
+                            <ArrowRight className="ml-2 h-5 w-5" />
+                        </Link>
+                    </Button>
+                  </div>
               </div>
           </div>
         </section>
@@ -275,5 +279,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
