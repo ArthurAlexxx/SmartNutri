@@ -146,8 +146,6 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
                 // A lógica foi movida para uma função interna em tenant-actions para robustez.
                 // Por simplicidade aqui, vamos assumir que o frontend irá refletir a mudança
                 // e a atualização do banco de dados será tratada de forma assíncrona ou em outro fluxo.
-                // A implementação direta `updateDoc` aqui exigiria a inicialização do Admin SDK,
-                // que causou o erro original.
                 console.log(`Pagamento confirmado para usuário ${userId}. Status a ser atualizado para 'active'.`);
 
             } catch (dbError: any) {
