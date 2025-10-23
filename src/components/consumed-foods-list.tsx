@@ -82,42 +82,40 @@ export default function ConsumedFoodsList({ mealEntries, onMealDeleted, onMealEd
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-2 flex-1 md:flex-grow-0">
-          <div className="relative flex-1 md:grow-0">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <div className="relative w-full sm:flex-1 sm:max-w-xs">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Buscar em suas refeições..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+              className="w-full rounded-lg bg-background pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>
-           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-1">
-                  <Filter className="h-3.5 w-3.5" />
-                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                      Categoria
-                  </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filtrar por tipo</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {Object.entries(mealTypeOptions).map(([key, name]) => (
-                  <DropdownMenuCheckboxItem
-                      key={key}
-                      checked={selectedCategories[key]}
-                      onCheckedChange={() => handleCategoryChange(key)}
-                  >
-                      {name}
-                  </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-1 w-full sm:w-auto">
+                <Filter className="h-3.5 w-3.5" />
+                <span className="whitespace-nowrap">
+                    Categoria
+                </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Filtrar por tipo</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {Object.entries(mealTypeOptions).map(([key, name]) => (
+                <DropdownMenuCheckboxItem
+                    key={key}
+                    checked={selectedCategories[key]}
+                    onCheckedChange={() => handleCategoryChange(key)}
+                >
+                    {name}
+                </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       <div className='space-y-4'>

@@ -204,9 +204,9 @@ export default function DashboardPage() {
                 </div>
                 <div className="lg:col-span-2 space-y-8 order-1 lg:order-2">
                     <Card className="shadow-sm rounded-2xl w-full">
-                        <CardHeader className="flex flex-row items-center justify-between">
+                       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <CardTitle>Refeições de Hoje</CardTitle>
-                            <Button onClick={() => setAddMealModalOpen(true)} size="sm">
+                            <Button onClick={() => setAddMealModalOpen(true)} size="sm" className="w-full sm:w-auto">
                                 <Plus className="mr-2 h-4 w-4" /> Adicionar Refeição
                             </Button>
                        </CardHeader>
