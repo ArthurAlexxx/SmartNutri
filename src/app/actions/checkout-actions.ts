@@ -165,7 +165,7 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
             try {
                 initializeAdminApp();
                 const db = getFirestore();
-                const userRef = db.collection('users').doc(userId);
+                const userRef = doc(db, 'users', userId);
                 
                 const subscriptionEndsAt = addDays(new Date(), 30);
                 
