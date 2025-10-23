@@ -42,6 +42,7 @@ export interface UserProfile {
     
     // Subscription details for independent patients
     subscriptionStatus?: 'trial' | 'active' | 'inactive';
+    subscriptionEndsAt?: Timestamp;
     trialEndsAt?: Timestamp;
 
     // Professional fields

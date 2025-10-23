@@ -3,6 +3,7 @@
 
 import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
+import { addDays } from 'date-fns';
 
 interface PaymentInput {
     userId: string;
@@ -166,11 +167,14 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
                 const db = getFirestore();
                 const userRef = db.collection('users').doc(userId);
                 
+                const subscriptionEndsAt = addDays(new Date(), 30);
+                
                 await userRef.update({
-                    subscriptionStatus: 'active'
+                    subscriptionStatus: 'active',
+                    subscriptionEndsAt: admin.firestore.Timestamp.fromDate(subscriptionEndsAt)
                 });
                 
-                console.log(`Pagamento confirmado para usuário ${userId}. Status atualizado para 'active'.`);
+                console.log(`Pagamento confirmado para usuário ${userId}. Status atualizado para 'active' com expiração em ${subscriptionEndsAt.toLocaleDateString()}.`);
 
             } catch (dbError: any) {
                 console.error(`Falha ao atualizar o status do usuário ${userId} para 'active' após o pagamento ${paymentId} ser confirmado.`, dbError);

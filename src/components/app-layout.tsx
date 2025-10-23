@@ -120,11 +120,13 @@ export default function AppLayout({ user, userProfile, onProfileUpdate, children
     
     // Status da assinatura?
     const status = userProfile?.subscriptionStatus;
-    if (status === 'active' || status === 'trial') return true;
-    
-    // Paciente comum sem plano, acesso negado às features premium
-    if (status === 'inactive') return false;
+    const endsAt = userProfile?.subscriptionEndsAt?.toDate();
 
+    if (status === 'active' && endsAt && endsAt > new Date()) return true;
+
+    const trialEndsAt = userProfile?.trialEndsAt?.toDate();
+    if (status === 'trial' && trialEndsAt && trialEndsAt > new Date()) return true;
+    
     return false; // Bloquear acesso por padrão
   };
 
