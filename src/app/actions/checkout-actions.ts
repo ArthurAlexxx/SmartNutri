@@ -2,7 +2,7 @@
 'use server';
 
 import * as admin from 'firebase-admin';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, doc, updateDoc } from 'firebase-admin/firestore';
 import { addDays } from 'date-fns';
 
 interface PaymentInput {
@@ -15,10 +15,10 @@ interface PaymentInput {
 }
 
 interface PaymentOutput {
-    paymentId?: string; // ID da transação (ex: pix_char_123456)
+    paymentId?: string; // ID da transação
     qrCode?: string; // Mapeado de brCodeBase64
     pixCode?: string; // Mapeado de brCode
-    error?: string;
+    error?: string; // Mensagem de erro explícita
 }
 
 interface StatusOutput {
@@ -58,18 +58,19 @@ function initializeAdminApp() {
  * @returns Um objeto com o ID do pagamento, a URL do QR Code e o código Pix, ou um erro.
  */
 export async function generatePixPayment(input: PaymentInput): Promise<PaymentOutput> {
-    console.log("Gerando pagamento para:", input.userName);
+    console.log("Iniciando geração de pagamento para:", input.userName);
 
     const apiKey = process.env.ABACATE_PAY_API_KEY;
     if (!apiKey) {
-        console.error("A chave da API da Abacate Pay não está configurada.");
+        console.error("A chave da API da Abacate Pay (ABACATE_PAY_API_KEY) não está configurada no .env.");
         return { error: 'O serviço de pagamento não está configurado corretamente.' };
     }
 
-    if (!input.userDocument || !input.userEmail) {
-        return { error: 'Documento e e-mail são obrigatórios.' };
+    if (!input.userDocument || !input.userEmail || !input.userPhone) {
+        return { error: 'CPF, e-mail e telefone são obrigatórios para o pagamento.' };
     }
     
+    // Converte o valor para centavos
     const amountInCents = Math.round(input.amount * 100);
 
     const requestBody = {
@@ -92,25 +93,30 @@ export async function generatePixPayment(input: PaymentInput): Promise<PaymentOu
         const options = {
           method: 'POST',
           headers: {
-              Authorization: `Bearer ${apiKey}`,
+              'Authorization': `Bearer ${apiKey}`,
               'Content-Type': 'application/json'
           },
           body: JSON.stringify(requestBody)
         };
+
         const response = await fetch(url, options);
+        const responseData = await response.json();
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Falha na comunicação com a Abacate Pay.');
+            // Se a resposta não for OK, lança um erro com a mensagem da API
+            const errorMessage = responseData.message || `Erro desconhecido da API: ${response.statusText}`;
+            console.error(`[generatePixPayment] API Error ${response.status}:`, errorMessage);
+            throw new Error(errorMessage);
         }
-        const paymentDataResponse = await response.json();
         
-        const paymentData = paymentDataResponse.data;
+        const paymentData = responseData.data;
 
         if (!paymentData || !paymentData.brCodeBase64 || !paymentData.brCode || !paymentData.id) {
-            throw new Error('A resposta da API de pagamento está incompleta.');
+            console.error("[generatePixPayment] Resposta da API incompleta:", responseData);
+            throw new Error('A resposta da API de pagamento está incompleta ou em formato inesperado.');
         }
 
+        console.log("Pagamento gerado com sucesso, ID:", paymentData.id);
         return {
             paymentId: paymentData.id,
             qrCode: `data:image/png;base64,${paymentData.brCodeBase64}`,
@@ -142,21 +148,23 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
         const options = {
           method: 'GET',
           headers: {
-              Authorization: `Bearer ${apiKey}`
+              'Authorization': `Bearer ${apiKey}`
           }
         };
 
         const response = await fetch(url, options);
+        const statusResponse = await response.json();
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Route GET:${errorData.path} not found` || 'Falha ao verificar o status do pagamento.');
+            const errorMessage = statusResponse.message || `Erro da API de verificação: ${response.statusText}`;
+            console.error(`[checkPixPaymentStatus] API Error ${response.status}:`, errorMessage);
+            throw new Error(errorMessage);
         }
 
-        const statusResponse = await response.json();
         const status = statusResponse.data?.status;
         
         if (!status) {
+             console.error("[checkPixPaymentStatus] Resposta da API de status incompleta:", statusResponse);
              throw new Error('A resposta da API de status está incompleta.');
         }
 
@@ -169,7 +177,7 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
                 
                 const subscriptionEndsAt = addDays(new Date(), 30);
                 
-                await userRef.update({
+                await updateDoc(userRef, {
                     subscriptionStatus: 'active',
                     subscriptionEndsAt: admin.firestore.Timestamp.fromDate(subscriptionEndsAt)
                 });
@@ -177,9 +185,9 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
                 console.log(`Pagamento confirmado para usuário ${userId}. Status atualizado para 'active' com expiração em ${subscriptionEndsAt.toLocaleDateString()}.`);
 
             } catch (dbError: any) {
-                console.error(`Falha ao atualizar o status do usuário ${userId} para 'active' após o pagamento ${paymentId} ser confirmado.`, dbError);
-                // Mesmo que o DB falhe, continuamos retornando o status 'PAID' para a UI,
-                // mas logamos o erro crítico no servidor.
+                console.error(`Falha crítica ao atualizar o status do usuário ${userId} para 'active' após o pagamento ${paymentId} ser confirmado.`, dbError);
+                // Mesmo que o DB falhe, continuamos retornando o status 'PAID' para a UI.
+                // O erro é logado no servidor para análise.
             }
         }
 
