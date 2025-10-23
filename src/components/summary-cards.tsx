@@ -28,8 +28,8 @@ const SummaryCard = ({ title, value, unit, icon: Icon, color, goal }: { title: s
                  <p className="text-sm font-medium text-muted-foreground">{title}</p>
             </CardHeader>
             <CardContent>
-                 <div className={cn("p-2.5 rounded-lg mb-2 w-fit", color)}>
-                    <Icon className="h-5 w-5 text-white" />
+                 <div className={cn("p-2 rounded-lg mb-2 w-fit", color)}>
+                    <Icon className="h-4 w-4 text-white" />
                 </div>
                 <div className="flex items-baseline gap-1.5">
                     <p className="text-3xl font-bold">{value}</p>
