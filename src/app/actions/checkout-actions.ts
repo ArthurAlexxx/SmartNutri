@@ -55,41 +55,24 @@ export async function generatePixPayment(input: PaymentInput): Promise<PaymentOu
     };
 
     try {
-        // --- CÓDIGO REAL DA API (COMENTADO PARA SIMULAÇÃO) ---
-        // const url = 'https://api.abacatepay.com/v1/pixQrCode/create';
-        // const options = {
-        //   method: 'POST',
-        //   headers: {
-        //       Authorization: `Bearer ${apiKey}`,
-        //       'Content-Type': 'application/json'
-        //   },
-        //   body: JSON.stringify(requestBody)
-        // };
-        // const response = await fetch(url, options);
-
-        // if (!response.ok) {
-        //     const errorData = await response.json();
-        //     throw new Error(errorData.message || 'Falha na comunicação com a Abacate Pay.');
-        // }
-        // const paymentData = await response.json();
-        // --- FIM DO CÓDIGO REAL ---
-
-
-        // ** SIMULAÇÃO DE RESPOSTA DA API **
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        const simulatedApiResponse = {
-          data: {
-            id: "pix_char_123456",
-            amount: amountInCents,
-            status: "PENDING",
-            brCode: "00020126360014br.gov.bcb.pix0114+55119999988885204000053039865802BR5913NOME DO LOJISTA6008BRASILIA62070503***6304E2A5",
-            brCodeBase64: "data:image/png;base64,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"
+        const url = 'https://api.abacatepay.com/v1/pixQrCode/create';
+        const options = {
+          method: 'POST',
+          headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
           },
-          error: null
+          body: JSON.stringify(requestBody)
         };
-        // ** FIM DA SIMULAÇÃO **
+        const response = await fetch(url, options);
 
-        const paymentData = simulatedApiResponse.data;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Falha na comunicação com a Abacate Pay.');
+        }
+        const paymentDataResponse = await response.json();
+        
+        const paymentData = paymentDataResponse.data;
 
         if (!paymentData || !paymentData.brCodeBase64 || !paymentData.brCode) {
             throw new Error('A resposta da API de pagamento está incompleta.');
