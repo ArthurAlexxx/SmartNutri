@@ -1,3 +1,4 @@
+
 // src/components/summary-cards.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Flame, Droplet, TrendingUp, Target, Users, BookCheck, Donut } from 'lucide-react';
@@ -32,8 +33,8 @@ const SummaryCard = ({ title, value, unit, icon: Icon, color, goal }: { title: s
             </CardHeader>
             <CardContent>
                 <div className="flex items-baseline gap-1.5">
-                    <p className="text-3xl font-bold">{value}</p>
-                    <p className="text-base text-muted-foreground">{unit}</p>
+                    <p className="text-2xl font-bold">{value}</p>
+                    <p className="text-sm text-muted-foreground">{unit}</p>
                 </div>
                 {goal != null && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3"/> Meta: {goal.toLocaleString('pt-BR')} {unit}</p>
