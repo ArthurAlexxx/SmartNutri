@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import SummaryCards from '@/components/summary-cards';
 import ConsumedFoodsList from '@/components/consumed-foods-list';
 import AddMealModal from '@/components/add-meal-modal';
+import WaterTrackerModal from '@/components/water-tracker-modal';
 
 
 export default function DashboardPage() {
@@ -37,6 +38,7 @@ export default function DashboardPage() {
   
   const [editingMeal, setEditingMeal] = useState<MealEntry | null>(null);
   const [isAddMealModalOpen, setAddMealModalOpen] = useState(false);
+  const [isWaterModalOpen, setWaterModalOpen] = useState(false);
 
   useEffect(() => {
     if (isUserLoading) return;
@@ -185,9 +187,11 @@ export default function DashboardPage() {
         onProfileUpdate={handleProfileUpdate}
     >
         <div className="flex flex-col gap-8">
-            <div className='flex flex-col items-center justify-center gap-2 text-center animate-fade-in'>
-                <h2 className='text-3xl font-bold text-foreground font-heading'>Diário de Bordo</h2>
-                <p className='text-muted-foreground'>Registre suas refeições e consumo de água para hoje.</p>
+            <div className='flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left animate-fade-in'>
+                <div className='flex-1'>
+                    <h2 className='text-3xl font-bold text-foreground font-heading'>Diário de Bordo</h2>
+                    <p className='text-muted-foreground'>Registre suas refeições e consumo de água para hoje.</p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -199,13 +203,15 @@ export default function DashboardPage() {
                     <WaterTrackerCard
                         waterIntake={todayHydration?.intake || 0}
                         waterGoal={waterGoal}
-                        onWaterUpdate={handleWaterUpdate}
+                        onAddWaterClick={() => setWaterModalOpen(true)}
                     />
                 </div>
                 <div className="lg:col-span-2 space-y-8 order-1 lg:order-2">
                     <Card className="shadow-sm rounded-2xl w-full">
                        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <CardTitle>Refeições de Hoje</CardTitle>
+                            <div className='flex-1'>
+                                <CardTitle>Refeições de Hoje</CardTitle>
+                            </div>
                             <Button onClick={() => setAddMealModalOpen(true)} size="sm" className="w-full sm:w-auto">
                                 <Plus className="mr-2 h-4 w-4" /> Adicionar Refeição
                             </Button>
@@ -236,6 +242,13 @@ export default function DashboardPage() {
               userId={user.uid} 
           />
         }
+        <WaterTrackerModal
+            isOpen={isWaterModalOpen}
+            onOpenChange={setWaterModalOpen}
+            waterIntake={todayHydration?.intake || 0}
+            waterGoal={waterGoal}
+            onWaterUpdate={handleWaterUpdate}
+        />
     </AppLayout>
   );
 }
