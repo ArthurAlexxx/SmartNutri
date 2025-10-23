@@ -24,13 +24,13 @@ interface SummaryCardsProps {
 const SummaryCard = ({ title, value, unit, icon: Icon, color, goal }: { title: string, value: string, unit: string, icon: React.ElementType, color: string, goal?: number | null }) => {
     return (
         <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl bg-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                 <p className="text-sm text-muted-foreground">{title}</p>
-                <div className={cn("p-2 rounded-lg", color)}>
-                    <Icon className="h-5 w-5 text-white" />
-                </div>
+            <CardHeader className="pb-2">
+                 <p className="text-sm font-medium text-muted-foreground">{title}</p>
             </CardHeader>
             <CardContent>
+                 <div className={cn("p-2.5 rounded-lg mb-2 w-fit", color)}>
+                    <Icon className="h-5 w-5 text-white" />
+                </div>
                 <div className="flex items-baseline gap-1.5">
                     <p className="text-3xl font-bold">{value}</p>
                     <p className="text-base text-muted-foreground">{unit}</p>
