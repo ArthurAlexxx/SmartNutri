@@ -30,7 +30,7 @@ const LogoDisplay = ({ siteConfig }: { siteConfig: SiteConfig }) => {
 export default function Footer({ siteConfig }: FooterProps) {
   return (
     <footer className="w-full border-t bg-secondary/30">
-      <div className="container py-12 md:py-16">
+      <div className="container py-12">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-12">
           
           <div className="flex flex-col items-start gap-4 md:col-span-12 lg:col-span-4">
@@ -42,7 +42,7 @@ export default function Footer({ siteConfig }: FooterProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 md:col-span-8 lg:col-span-8 lg:pl-16">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 md:col-span-12 lg:col-span-8 lg:pl-16">
             <div className='col-span-1'>
               <h3 className="mb-4 font-semibold text-foreground">Produto</h3>
               <ul className="space-y-3">

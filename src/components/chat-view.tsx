@@ -1,3 +1,4 @@
+
 // src/components/chat-view.tsx
 'use client';
 
@@ -5,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import ChatMessage, { type Message } from './chat-message';
 import ChatInput from './chat-input';
 import { Loader2 } from 'lucide-react';
+import { ScrollArea } from './ui/scroll-area';
 
 interface ChatViewProps {
   messages: Message[];
@@ -21,8 +23,8 @@ export default function ChatView({ messages, isResponding, onSendMessage }: Chat
 
   return (
     <div className="flex-1 flex flex-col justify-between">
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="w-full max-w-4xl mx-auto">
+        <ScrollArea className="flex-1">
+            <div className="w-full max-w-4xl mx-auto p-4 md:p-6">
                 {messages.map((message) => (
                     <ChatMessage key={message.id} message={message} />
                 ))}
@@ -34,7 +36,7 @@ export default function ChatView({ messages, isResponding, onSendMessage }: Chat
                 )}
                  <div ref={endOfMessagesRef} />
             </div>
-        </div>
+        </ScrollArea>
         <ChatInput onSendMessage={onSendMessage} isResponding={isResponding} />
     </div>
   );

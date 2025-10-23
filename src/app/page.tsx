@@ -69,14 +69,14 @@ export default function Home() {
       <Header siteConfig={config} />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative flex items-center min-h-[calc(100vh-80px)] pt-12 pb-24 md:pt-16 md:pb-32 bg-background">
+        <section className="relative flex items-center min-h-[calc(100vh-80px)] py-16 md:py-24 bg-background">
           <div className="container z-10 px-4 md:px-6">
             <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
               <div className="flex flex-col justify-center space-y-8 text-center animate-fade-in lg:text-left">
                 <h1
                     className={cn(
-                        "font-extrabold tracking-tight text-foreground text-balance",
-                        titleFontSizes[config.theme.titleFontSize] || titleFontSizes['Médio']
+                        "font-extrabold tracking-tight text-foreground text-balance text-4xl sm:text-5xl", // Responsive font size
+                        // titleFontSizes[config.theme.titleFontSize] || titleFontSizes['Médio']
                     )}
                     dangerouslySetInnerHTML={{ __html: config.heroSection.title }}
                 />
@@ -92,7 +92,7 @@ export default function Home() {
                    </Button>
                 </div>
               </div>
-               <div className="relative h-[300px] sm:h-[500px] w-full animate-fade-in" style={{animationDelay: '150ms'}}>
+               <div className="relative h-[250px] sm:h-[400px] lg:h-[500px] w-full animate-fade-in" style={{animationDelay: '150ms'}}>
                     {config.heroSection.imageUrl && (
                       <Image
                         src={config.heroSection.imageUrl}
@@ -107,7 +107,7 @@ export default function Home() {
         </section>
 
         {isProfessionalSite ? (
-           <section id="about-pro" className="w-full py-24 lg:py-32 bg-secondary border-y">
+           <section id="about-pro" className="w-full py-20 lg:py-24 bg-secondary border-y">
                 <div className="container px-4 md:px-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 items-center">
                         <div className="md:col-span-1 animate-fade-in">
@@ -147,7 +147,7 @@ export default function Home() {
                 </div>
             </section>
         ) : (
-            <section id="platform" className="w-full py-24 lg:py-32 bg-secondary border-y">
+            <section id="platform" className="w-full py-20 lg:py-24 bg-secondary border-y">
                 <div className="container px-4 md:px-6">
                     <div className="grid gap-10 lg:grid-cols-2 items-center">
                         <div className="space-y-4 animate-fade-in">
@@ -180,9 +180,9 @@ export default function Home() {
         )}
         
         {/* Features Section - For Everyone now */}
-        <section id="features" className="w-full py-24 lg:py-32 bg-background">
+        <section id="features" className="w-full py-20 lg:py-24 bg-background">
             <div className="container px-4 md:px-6">
-                <div className="mb-16 text-center animate-fade-in">
+                <div className="mb-12 md:mb-16 text-center animate-fade-in">
                 <h2
                     className="text-3xl font-bold tracking-tighter text-foreground text-balance sm:text-4xl md:text-5xl"
                     dangerouslySetInnerHTML={{ __html: config.featuresSection.title }}
@@ -208,9 +208,9 @@ export default function Home() {
         </section>
         
         {/* Testimonials */}
-        <section id="testimonials" className="flex flex-col items-center justify-center w-full py-24 lg:py-32 bg-secondary border-y">
+        <section id="testimonials" className="flex flex-col items-center justify-center w-full py-20 lg:py-24 bg-secondary border-y">
             <div className="container px-4 md:px-6">
-                <div className="mb-16 text-center relative">
+                <div className="mb-12 md:mb-16 text-center relative">
                      <h2 className="text-6xl sm:text-8xl font-black text-gray-200/50 dark:text-gray-800/50 absolute inset-x-0 -top-4 w-full text-center select-none -z-10 opacity-50">
                        RESULTADOS
                     </h2>
@@ -250,7 +250,7 @@ export default function Home() {
         </section>
         
         {/* Final CTA */}
-        <section className="w-full py-24 lg:py-32 bg-background">
+        <section className="w-full py-20 lg:py-24 bg-background">
           <div className="container text-center animate-fade-in px-4 md:px-6">
               <div className="max-w-2xl mx-auto space-y-6">
                   <h2 className="text-3xl font-bold tracking-tighter text-balance sm:text-4xl md:text-5xl"

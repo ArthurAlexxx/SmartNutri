@@ -162,12 +162,12 @@ export default function HistoryPage() {
         onProfileUpdate={handleProfileUpdate}
     >
         <div className="flex flex-col gap-8">
-            <div className="mb-6 animate-fade-in text-center">
+            <div className="mb-2 animate-fade-in text-center">
                 <h2 className="text-3xl font-bold text-foreground font-heading">Histórico Nutricional</h2>
                 <p className="text-muted-foreground">Selecione uma data para ver o detalhe de suas refeições e o resumo nutricional do dia.</p>
             </div>
 
-            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'month')} className="w-full mb-8">
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'month')} className="w-full max-w-md mx-auto mb-4">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="day">Diário</TabsTrigger>
                     <TabsTrigger value="month">Mensal</TabsTrigger>
@@ -177,7 +177,7 @@ export default function HistoryPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
                     <Card className="shadow-sm rounded-2xl">
-                        <CardContent className="p-2">
+                        <CardContent className="p-0 sm:p-2">
                              {viewMode === 'day' ? (
                                 <Calendar
                                     mode="single"

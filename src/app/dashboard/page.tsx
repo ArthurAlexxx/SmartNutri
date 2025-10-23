@@ -185,11 +185,9 @@ export default function DashboardPage() {
         onProfileUpdate={handleProfileUpdate}
     >
         <div className="flex flex-col gap-8">
-            <div className='flex flex-col items-center justify-center gap-4 text-center animate-fade-in'>
-                <div>
-                    <h2 className='text-3xl font-bold text-foreground font-heading'>Diário de Bordo</h2>
-                    <p className='text-muted-foreground'>Registre suas refeições e consumo de água para hoje.</p>
-                </div>
+            <div className='flex flex-col items-center justify-center gap-2 text-center animate-fade-in'>
+                <h2 className='text-3xl font-bold text-foreground font-heading'>Diário de Bordo</h2>
+                <p className='text-muted-foreground'>Registre suas refeições e consumo de água para hoje.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
