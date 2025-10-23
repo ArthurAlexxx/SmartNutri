@@ -72,10 +72,10 @@ export default function Home() {
         <section className="relative flex items-center min-h-[calc(100vh-80px)] py-16 md:py-24 bg-background">
           <div className="container z-10 px-4 md:px-6">
             <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
-              <div className="flex flex-col justify-center space-y-8 text-center animate-fade-in lg:text-left">
+              <div className="flex flex-col justify-center space-y-8 text-center lg:text-left">
                 <h1
                     className={cn(
-                        "font-extrabold tracking-tight text-foreground text-balance text-4xl sm:text-5xl", // Responsive font size
+                        "font-extrabold tracking-tight text-foreground text-balance text-4xl sm:text-5xl",
                         // titleFontSizes[config.theme.titleFontSize] || titleFontSizes['Médio']
                     )}
                     dangerouslySetInnerHTML={{ __html: config.heroSection.title }}
@@ -121,14 +121,14 @@ export default function Home() {
                                 />
                             )}
                         </div>
-                        <div className="md:col-span-2 space-y-6 animate-fade-in" style={{animationDelay: '150ms'}}>
+                        <div className="md:col-span-2 space-y-6 animate-fade-in text-center md:text-left" style={{animationDelay: '150ms'}}>
                                 <h2 className="text-3xl font-bold tracking-tighter text-foreground text-balance sm:text-4xl">
                                 {config.professionalProfileSection.title}
                             </h2>
                             <p className="text-lg text-muted-foreground whitespace-pre-line">
                                 {config.professionalProfileSection.aboutMe}
                             </p>
-                            <div className='flex flex-col sm:flex-row gap-4 sm:gap-8 pt-4'>
+                            <div className='flex flex-col sm:flex-row gap-4 sm:gap-8 pt-4 justify-center md:justify-start'>
                                 {config.professionalProfileSection.location && (
                                     <div className='flex items-center gap-3'>
                                         <MapPin className='h-5 w-5 text-primary'/>
@@ -150,11 +150,11 @@ export default function Home() {
             <section id="platform" className="w-full py-20 lg:py-24 bg-secondary border-y">
                 <div className="container px-4 md:px-6">
                     <div className="grid gap-10 lg:grid-cols-2 items-center">
-                        <div className="space-y-4 animate-fade-in">
+                        <div className="space-y-4 animate-fade-in text-center lg:text-left">
                             <h2 className="text-3xl font-bold tracking-tighter text-foreground text-balance sm:text-4xl"
                                 dangerouslySetInnerHTML={{ __html: config.ctaSection.title }}
                             ></h2>
-                            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed mx-auto lg:mx-0">
                             {config.ctaSection.subtitle}
                             </p>
                             <Button asChild size="lg" disabled>
@@ -275,3 +275,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
