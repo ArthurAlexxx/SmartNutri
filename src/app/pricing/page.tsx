@@ -15,6 +15,7 @@ import { useUser } from '@/firebase';
 import type { SiteConfig } from '@/lib/site-config-schema';
 import { SiteConfigContext } from '@/context/site-config-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import CheckoutModal from '@/components/checkout-modal';
 
 const features = {
   free: [
@@ -58,13 +59,25 @@ const LoadingSkeleton = () => (
 
 export default function PricingPage() {
     const config = useContext(SiteConfigContext);
-    const { user } = useUser();
+    const { user, userProfile } = useUser();
+    const [isModalOpen, setModalOpen] = useState(false);
     
     if (!config) {
       return <LoadingSkeleton />;
     }
+    
+    const handlePremiumClick = () => {
+        if (!user) {
+            // Se não estiver logado, redireciona para o registro
+            window.location.href = '/register';
+        } else {
+            // Se estiver logado, abre o modal de checkout
+            setModalOpen(true);
+        }
+    };
 
   return (
+    <>
     <div className="flex min-h-screen flex-col bg-background">
       <Header siteConfig={config} />
       <main className="flex-1">
@@ -129,8 +142,8 @@ export default function PricingPage() {
                         </ul>
                     </CardContent>
                     <CardFooter className="p-8 pt-0">
-                        <Button asChild size="lg" className="w-full">
-                            <Link href={user ? '/dashboard' : '/register'}>Assinar Premium</Link>
+                        <Button onClick={handlePremiumClick} size="lg" className="w-full">
+                            Assinar Premium
                         </Button>
                     </CardFooter>
                 </Card>
@@ -139,5 +152,13 @@ export default function PricingPage() {
       </main>
       <Footer siteConfig={config} />
     </div>
+    {userProfile && (
+        <CheckoutModal 
+            isOpen={isModalOpen}
+            onOpenChange={setModalOpen}
+            userProfile={userProfile}
+        />
+    )}
+    </>
   );
 }
