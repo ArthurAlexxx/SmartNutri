@@ -1,11 +1,8 @@
 // src/app/actions/checkout-actions.ts
 'use server';
 
-import { doc, updateDoc } from 'firebase/firestore';
-// A inicialização do admin foi removida daqui, pois não é necessária para o checkout do cliente.
-// Usaremos a instância do cliente para atualizar o documento após a confirmação.
-import { initializeFirebase } from '@/firebase';
-
+import * as admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 
 interface PaymentInput {
     userId: string;
@@ -26,6 +23,31 @@ interface PaymentOutput {
 interface StatusOutput {
     status?: 'PENDING' | 'PAID' | 'EXPIRED' | 'CANCELED';
     error?: string;
+}
+
+function initializeAdminApp() {
+    if (admin.apps.length > 0) {
+        return admin.app();
+    }
+
+    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (!serviceAccountKey) {
+        throw new Error('A variável de ambiente FIREBASE_SERVICE_ACCOUNT_KEY não está definida para atualizar o status do usuário.');
+    }
+
+    try {
+        const serviceAccountJson = JSON.parse(serviceAccountKey);
+        if (serviceAccountJson.private_key) {
+            serviceAccountJson.private_key = serviceAccountJson.private_key.replace(/\\n/g, '\n');
+        }
+
+        return admin.initializeApp({
+            credential: admin.credential.cert(serviceAccountJson),
+        });
+    } catch (error: any) {
+        console.error("Falha crítica ao inicializar o Firebase Admin SDK:", error.message);
+        throw new Error("Erro de parsing na chave de serviço do Firebase.");
+    }
 }
 
 
@@ -138,18 +160,22 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
         }
 
         // Se o pagamento foi confirmado, atualiza o status do usuário no Firestore
-        // ATENÇÃO: Esta operação agora requer a inicialização do Admin SDK sob demanda.
         if (status === 'PAID') {
             try {
-                // Para evitar o erro de inicialização, a atualização do DB deve ser feita
-                // em um contexto que possa usar o Admin SDK de forma segura.
-                // A lógica foi movida para uma função interna em tenant-actions para robustez.
-                // Por simplicidade aqui, vamos assumir que o frontend irá refletir a mudança
-                // e a atualização do banco de dados será tratada de forma assíncrona ou em outro fluxo.
-                console.log(`Pagamento confirmado para usuário ${userId}. Status a ser atualizado para 'active'.`);
+                initializeAdminApp();
+                const db = getFirestore();
+                const userRef = db.collection('users').doc(userId);
+                
+                await userRef.update({
+                    subscriptionStatus: 'active'
+                });
+                
+                console.log(`Pagamento confirmado para usuário ${userId}. Status atualizado para 'active'.`);
 
             } catch (dbError: any) {
-                console.error(`Falha ao registrar a necessidade de atualizar o status do usuário ${userId} para 'active' após o pagamento ${paymentId} ser confirmado.`, dbError);
+                console.error(`Falha ao atualizar o status do usuário ${userId} para 'active' após o pagamento ${paymentId} ser confirmado.`, dbError);
+                // Mesmo que o DB falhe, continuamos retornando o status 'PAID' para a UI,
+                // mas logamos o erro crítico no servidor.
             }
         }
 
