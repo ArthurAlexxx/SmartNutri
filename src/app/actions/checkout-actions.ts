@@ -149,7 +149,7 @@ export async function checkPixPaymentStatus(paymentId: string, userId: string): 
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'Falha ao verificar o status do pagamento.');
+            throw new Error(errorData.message || `Route GET:${errorData.path} not found` || 'Falha ao verificar o status do pagamento.');
         }
 
         const statusResponse = await response.json();
