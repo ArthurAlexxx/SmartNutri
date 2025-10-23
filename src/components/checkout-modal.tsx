@@ -73,7 +73,7 @@ export default function CheckoutModal({ isOpen, onOpenChange, userProfile }: Che
         amount: 9.99,
     });
 
-    if (result.error || !result.qrCode || !result.paymentId) {
+    if (result.error || !result.qrCode || !result.paymentId || !result.pixCode) {
       toast({
         title: "Erro ao Gerar Pagamento",
         description: result.error || "Não foi possível gerar o QR Code do Pix. Tente novamente.",
@@ -84,7 +84,7 @@ export default function CheckoutModal({ isOpen, onOpenChange, userProfile }: Che
       setPaymentData({
         paymentId: result.paymentId,
         qrCode: result.qrCode,
-        pixCode: result.pixCode || 'Não foi possível gerar o código copia e cola.',
+        pixCode: result.pixCode,
       });
       setModalState('payment');
     }

@@ -112,7 +112,7 @@ export async function generatePixPayment(input: PaymentInput): Promise<PaymentOu
 
         return {
             paymentId: paymentData.id,
-            qrCode: paymentData.brCodeBase64,
+            qrCode: `data:image/png;base64,${paymentData.brCodeBase64}`,
             pixCode: paymentData.brCode,
         };
 
