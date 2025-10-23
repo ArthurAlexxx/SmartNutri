@@ -66,7 +66,7 @@ export default function CheckoutModal({ isOpen, onOpenChange, userProfile }: Che
         userName: data.fullName,
         userEmail: data.email,
         userPhone: data.phone,
-        userDocument: data.cpf,
+        userDocument: data.cpf, // Mapeado para taxId
         amount: 9.99,
     });
     setIsLoading(false);
