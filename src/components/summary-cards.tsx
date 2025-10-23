@@ -1,11 +1,10 @@
-
 // src/components/summary-cards.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Flame, Droplet, TrendingUp, Target, Users, BookCheck, Donut } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Rocket } from 'lucide-react';
 import { FaHamburger } from 'react-icons/fa';
-
+import { Flame, Droplet, Donut } from 'lucide-react';
 
 interface SummaryCardsProps {
   totalNutrients: {
@@ -18,63 +17,34 @@ interface SummaryCardsProps {
     calories: number;
     protein: number;
   };
-  isProfessional?: boolean;
   isAnalysisPage?: boolean;
 }
 
 const SummaryCard = ({ title, value, unit, icon: Icon, color, goal }: { title: string, value: string, unit: string, icon: React.ElementType, color: string, goal?: number | null }) => {
     return (
         <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl bg-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-                <div className={cn("p-2 rounded-lg", color)}>
-                    <Icon className="h-4 w-4 text-white" />
+            <CardContent className="p-4 flex items-center gap-4">
+                <div className={cn("p-3 rounded-lg", color)}>
+                    <Icon className="h-6 w-6 text-white" />
                 </div>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-baseline gap-1.5">
-                    <p className="text-2xl font-bold">{value}</p>
-                    <p className="text-sm text-muted-foreground">{unit}</p>
+                <div className='flex-1'>
+                    <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                    <div className="flex items-baseline gap-1.5">
+                        <p className="text-2xl font-bold">{value}</p>
+                        <p className="text-sm text-muted-foreground">{unit}</p>
+                    </div>
+                     {goal != null && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3"/> Meta: {goal.toLocaleString('pt-BR')} {unit}</p>
+                    )}
                 </div>
-                {goal != null && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3"/> Meta: {goal.toLocaleString('pt-BR')} {unit}</p>
-                )}
             </CardContent>
         </Card>
     );
 };
 
 
-export default function SummaryCards({ totalNutrients, nutrientGoals, isProfessional = false, isAnalysisPage = false }: SummaryCardsProps) {
+export default function SummaryCards({ totalNutrients, nutrientGoals, isAnalysisPage = false }: SummaryCardsProps) {
   
-  if (isProfessional) {
-     const professionalCardsData = [
-        {
-            title: 'Total de Pacientes',
-            value: `${totalNutrients.calorias}`, // Reusing 'calorias' for total patients
-            unit: 'pacientes',
-            icon: Users,
-            color: 'bg-blue-400',
-        },
-        {
-            title: 'Planos Ativos',
-            value: `${totalNutrients.proteinas}`, // Reusing 'proteinas' for active plans
-            unit: 'planos',
-            icon: BookCheck,
-            color: 'bg-green-400',
-        },
-     ];
-     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {professionalCardsData.map((card, index) => (
-            <div key={card.title} className="animate-fade-in" style={{animationDelay: `${index * 100}ms`}}>
-                <SummaryCard {...card} />
-            </div>
-          ))}
-        </div>
-      );
-  }
-
   const titlePrefix = isAnalysisPage ? 'Média ' : '';
 
   const summaryCardsData = [
@@ -110,8 +80,10 @@ export default function SummaryCards({ totalNutrients, nutrientGoals, isProfessi
     }
   ];
 
+  const cardsToRender = isAnalysisPage ? summaryCardsData : summaryCardsData.slice(0, 2);
+
   return (
-    <div className={cn("grid gap-4", isAnalysisPage ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2")}>
+    <div className={cn("grid gap-4", isAnalysisPage ? "grid-cols-2 md:grid-cols-4" : "grid-cols-1")}>
       {summaryCardsData.map((card, index) => (
         <div key={card.title} className="animate-fade-in" style={{animationDelay: `${index * 100}ms`}}>
             <SummaryCard {...card} />
