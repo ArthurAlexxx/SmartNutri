@@ -11,21 +11,8 @@ interface InsightsCardProps {
 
 export default function InsightsCard({ insights, isLoading }: InsightsCardProps) {
   return (
-    <Card className="shadow-sm rounded-2xl w-full bg-primary/5 border-primary/20 animate-fade-in-down">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 bg-primary/10 text-primary p-3 rounded-full">
-            <Lightbulb className="h-6 w-6" />
-          </div>
-          <div className="flex-1">
-            <CardTitle className="text-xl font-bold text-foreground">Análise da IA</CardTitle>
-            <CardDescription className="text-primary">
-              Nossa IA analisou seus dados para trazer dicas personalizadas.
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
+    <Card className="shadow-sm rounded-2xl w-full bg-background animate-fade-in-down">
+      <CardContent className='p-6'>
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[100px] text-muted-foreground">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />

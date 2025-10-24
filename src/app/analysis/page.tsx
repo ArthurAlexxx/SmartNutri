@@ -7,7 +7,7 @@ import type { UserProfile } from '@/types/user';
 import type { HydrationEntry } from '@/types/hydration';
 import type { WeightLog } from '@/types/weight';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Download } from 'lucide-react';
+import { Loader2, Download, Lightbulb, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { subDays, eachDayOfInterval, format, startOfDay } from 'date-fns';
 import AppLayout from '@/components/app-layout';
@@ -20,6 +20,8 @@ import SummaryCards from '@/components/summary-cards';
 import ChartsView from '@/components/analysis/charts-view';
 import { generateAnalysisInsights } from '@/ai/flows/analysis-flow';
 import InsightsCard from '@/components/analysis/insights-card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 
 type Period = 7 | 15 | 30;
 
@@ -36,6 +38,8 @@ export default function AnalysisPage() {
 
   const [insights, setInsights] = useState<string[]>([]);
   const [loadingInsights, setLoadingInsights] = useState(false);
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+
 
   const handleError = useCallback((error: any, context: string) => {
     console.error(`Error fetching ${context}:`, error);
@@ -129,6 +133,7 @@ export default function AnalysisPage() {
             waterGoal: userProfile.waterGoal,
             weight: userProfile.weight,
             targetWeight: userProfile.targetWeight,
+            targetDate: userProfile.targetDate ? (userProfile.targetDate as Timestamp).toDate().toISOString() : undefined,
         };
 
         const sanitizedMealEntries = periodMeals.map((e: MealEntry) => ({ 
@@ -216,7 +221,24 @@ export default function AnalysisPage() {
     
     return (
         <div className="w-full space-y-8">
-            <InsightsCard insights={insights} isLoading={loadingInsights} />
+            <Collapsible open={isInsightsOpen} onOpenChange={setIsInsightsOpen}>
+                <CollapsibleTrigger asChild>
+                     <Button
+                        variant="outline"
+                        className="w-full justify-between text-lg font-semibold h-14 px-6 border-primary/20 bg-primary/5 hover:bg-primary/10"
+                    >
+                        <div className='flex items-center gap-3'>
+                            <Lightbulb className="h-6 w-6 text-primary" />
+                             Análise da IA
+                        </div>
+                        <ChevronDown className={cn("h-6 w-6 text-primary transition-transform", isInsightsOpen && "rotate-180")} />
+                    </Button>
+                </CollapsibleTrigger>
+                 <CollapsibleContent className="py-4">
+                    <InsightsCard insights={insights} isLoading={loadingInsights} />
+                </CollapsibleContent>
+            </Collapsible>
+
              <SummaryCards
                 totalNutrients={totalNutrients}
                 nutrientGoals={userProfile ? { calories: userProfile.calorieGoal || 2000, protein: userProfile.proteinGoal || 140 } : undefined}
