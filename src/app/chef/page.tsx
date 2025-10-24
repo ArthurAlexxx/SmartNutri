@@ -86,7 +86,6 @@ export default function ChefPage() {
   const router = useRouter();
   const firestore = useFirestore();
 
-  const [loading, setLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
@@ -97,8 +96,6 @@ export default function ChefPage() {
       router.push('/login');
       return;
     }
-
-    setLoading(!userProfile);
 
     let unsubMessages: Unsubscribe | undefined;
 
@@ -127,7 +124,7 @@ export default function ChefPage() {
     return () => {
       if (unsubMessages) unsubMessages();
     };
-  }, [user, isUserLoading, router, firestore, userProfile]);
+  }, [user, isUserLoading, router, firestore]);
 
   const handleProfileUpdateWithToast = useCallback(async (updatedProfile: Partial<UserProfile>) => {
      await onProfileUpdate(updatedProfile);
@@ -223,7 +220,7 @@ export default function ChefPage() {
   }
 
 
-  if (loading || isUserLoading) {
+  if (isUserLoading) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-muted/40 items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -265,5 +262,3 @@ export default function ChefPage() {
     </AppLayout>
   );
 }
-
-    

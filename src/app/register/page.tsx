@@ -1,3 +1,4 @@
+
 // src/app/register/page.tsx
 'use client';
 
@@ -26,7 +27,10 @@ import { addDays } from 'date-fns';
 const formSchema = z.object({
   fullName: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
   email: z.string().email('E-mail inválido.'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.'),
+  password: z.string()
+    .min(6, 'A senha deve ter pelo menos 6 caracteres.')
+    .regex(/[a-zA-Z]/, 'A senha deve conter pelo menos uma letra.')
+    .regex(/[0-9]/, 'A senha deve conter pelo menos um número.'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não coincidem.',
@@ -127,7 +131,7 @@ export default function RegisterPage() {
                 description = "O formato do e-mail fornecido é inválido.";
                 break;
             case 'auth/weak-password':
-                description = "A senha é muito fraca. Tente uma mais forte, com pelo menos 6 caracteres.";
+                description = "A senha é muito fraca. Tente uma mais forte, com letras e números.";
                 break;
             default:
                 if (!error.message.includes('permission-error')) {
@@ -189,7 +193,7 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
-                    <FormControl><Input type="password" placeholder="Mínimo de 6 caracteres" {...field} /></FormControl>
+                    <FormControl><Input type="password" placeholder="Mínimo 6 caracteres, com letras e números" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

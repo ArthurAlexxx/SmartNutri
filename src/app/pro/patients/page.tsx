@@ -25,7 +25,10 @@ export default function ProPatientsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading) {
+        setLoading(true);
+        return;
+    }
     if (!user) {
       router.push('/login');
       return;
@@ -127,5 +130,3 @@ export default function ProPatientsPage() {
     </AppLayout>
   );
 }
-
-    

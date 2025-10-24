@@ -41,13 +41,16 @@ export default function HistoryPage() {
   const { toast } = useToast();
   
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
       router.push('/login');
       return;
     }
 
-    setLoading(!userProfile);
+    setLoading(false);
 
     let unsubMeals: Unsubscribe | undefined;
     let unsubHydration: Unsubscribe | undefined;
@@ -56,7 +59,6 @@ export default function HistoryPage() {
       const mealsQuery = query(collection(firestore, 'meal_entries'), where('userId', '==', user.uid));
       unsubMeals = onSnapshot(mealsQuery, (snapshot) => {
         setAllMealEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MealEntry)));
-        setLoading(false);
       });
 
       const hydrationQuery = query(collection(firestore, 'hydration_entries'), where('userId', '==', user.uid));
@@ -70,7 +72,7 @@ export default function HistoryPage() {
       if (unsubHydration) unsubHydration();
     };
 
-  }, [user, isUserLoading, router, firestore, userProfile]);
+  }, [user, isUserLoading, router, firestore]);
   
   const { mealEntries, hydrationEntries } = useMemo(() => {
     if (viewMode === 'day' && selectedDate) {
@@ -230,5 +232,3 @@ export default function HistoryPage() {
     </AppLayout>
   );
 }
-
-    

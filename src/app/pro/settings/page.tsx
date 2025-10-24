@@ -118,7 +118,10 @@ export default function ProSettingsPage() {
   const isSuperAdmin = userProfile?.role === 'super-admin';
 
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
         router.push('/login');
         return;
@@ -439,5 +442,3 @@ export default function ProSettingsPage() {
     </AppLayout>
   );
 }
-
-    

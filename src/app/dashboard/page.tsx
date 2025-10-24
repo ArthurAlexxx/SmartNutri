@@ -33,7 +33,6 @@ export default function DashboardPage() {
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
   const [hydrationEntries, setHydrationEntries] = useState<HydrationEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [room, setRoom] = useState<Room | null>(null);
   const { toast } = useToast();
   
@@ -43,15 +42,13 @@ export default function DashboardPage() {
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (isUserLoading) return; // Aguarda a verificação do usuário
+    if (isUserLoading) {
+      // Continue to show loading state while user data is being fetched.
+      return;
+    }
     if (!user) {
       router.push('/login');
       return;
-    }
-    
-    // Mostra a página assim que o perfil do usuário estiver disponível
-    if (userProfile !== undefined) {
-      setLoading(false);
     }
 
     let unsubRoom: Unsubscribe | undefined;
@@ -177,7 +174,7 @@ export default function DashboardPage() {
     protein: room?.activePlan?.proteinGoal || userProfile?.proteinGoal || 140,
   }), [room, userProfile]);
 
-  if (loading || isUserLoading) {
+  if (isUserLoading) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background items-center justify-center">
          <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -274,5 +271,3 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
-
-    

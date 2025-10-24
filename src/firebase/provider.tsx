@@ -1,5 +1,5 @@
 
-// src/app/firebase/provider.tsx
+// src/firebase/provider.tsx
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -84,6 +84,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                     const profileData = { id: profileDoc.id, ...profileDoc.data() } as UserProfile;
                     setUserAuthState(prevState => ({ ...prevState, userProfile: profileData, isUserLoading: false, userError: null }));
                 } else {
+                    // Profile doesn't exist for this user.
                     setUserAuthState(prevState => ({ ...prevState, userProfile: null, isUserLoading: false }));
                 }
             }, 
@@ -94,7 +95,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         );
         return () => unsubscribeProfile();
     } else if (!userAuthState.user) {
-        // When user logs out, clear the profile and stop loading
+        // When user logs out or no user is found after initial check, stop loading.
         setUserAuthState(prevState => ({ ...prevState, userProfile: null, isUserLoading: false }));
     }
   }, [userAuthState.user, firestore]);
@@ -189,7 +190,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 /**
  * Hook specifically for accessing the authenticated user's state.
  * This provides the User object, loading status, and any auth errors.
- * @returns {UserHookResult} Object with user, userProfile, isUserLoading, userError.
+ * @returns {UserHookResult} Object with user, userProfile, isUserLoading, userError, and onProfileUpdate.
  */
 export const useUser = (): UserHookResult => {
   const { user, userProfile, isUserLoading, userError, onProfileUpdate } = useFirebaseContext();

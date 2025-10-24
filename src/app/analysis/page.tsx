@@ -48,13 +48,16 @@ export default function AnalysisPage() {
   }, []);
 
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
       router.push('/login');
       return;
     }
 
-    setLoading(!userProfile);
+    setLoading(false);
 
     let unsubMeals: Unsubscribe | undefined;
     let unsubHydration: Unsubscribe | undefined;
@@ -65,7 +68,6 @@ export default function AnalysisPage() {
 
       unsubMeals = onSnapshot(baseQuery('meal_entries'), (snapshot) => {
         setMealEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MealEntry)));
-        setLoading(false);
       }, (error) => handleError(error, 'meals'));
 
       unsubHydration = onSnapshot(baseQuery('hydration_entries'), (snapshot) => {
@@ -82,7 +84,7 @@ export default function AnalysisPage() {
       if (unsubHydration) unsubHydration();
       if (unsubWeight) unsubWeight();
     };
-  }, [user, isUserLoading, router, firestore, userProfile, handleError]);
+  }, [user, isUserLoading, router, firestore, handleError]);
 
   
   const getDateFilteredData = useCallback((entries: {date: string}[], period: number) => {
@@ -113,6 +115,7 @@ export default function AnalysisPage() {
      );
      
      const uniqueDays = new Set(periodMeals.map(meal => meal.date)).size;
+     if (uniqueDays === 0) return { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 };
 
      return {
         calorias: totals.calorias / uniqueDays,
@@ -295,5 +298,3 @@ export default function AnalysisPage() {
     </AppLayout>
   );
 }
-
-    

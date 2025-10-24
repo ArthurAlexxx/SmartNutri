@@ -1,3 +1,4 @@
+
 // src/app/plan/page.tsx
 'use client';
 
@@ -27,15 +28,20 @@ export default function PlanPage() {
   const [isChatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
-    if (isUserLoading || !firestore) return;
+    if (isUserLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
       router.push('/login');
       return;
     }
 
+    setLoading(false);
+
     let unsubRoom: Unsubscribe | undefined;
 
-    if (userProfile) {
+    if (firestore && userProfile) {
         if (userProfile.patientRoomId) {
             const roomRef = doc(firestore, 'rooms', userProfile.patientRoomId);
             unsubRoom = onSnapshot(roomRef, (roomDoc) => {
@@ -44,19 +50,12 @@ export default function PlanPage() {
               } else {
                 setRoom(null); // Room was deleted
               }
-              setLoading(false);
-            }, () => {
-              // Error fetching room
-              setLoading(false);
+            }, (error) => {
+              console.error("Error fetching room:", error);
             });
         } else {
-            // No room, not an error
             setRoom(null);
-            setLoading(false);
         }
-    } else if (!isUserLoading) {
-        // Profile is still loading or doesn't exist
-        setLoading(isUserLoading);
     }
 
     return () => {
@@ -89,7 +88,7 @@ export default function PlanPage() {
   }
 
 
-  if (loading || isUserLoading) {
+  if (isUserLoading) {
     return (
         <AppLayout user={user} userProfile={userProfile} onProfileUpdate={onProfileUpdate}>
             <div className="flex min-h-[calc(100vh-150px)] w-full flex-col bg-muted/40 items-center justify-center">

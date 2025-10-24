@@ -24,7 +24,10 @@ export default function ProProfessionalsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    if (isUserLoading || !firestore) return;
+    if (isUserLoading) {
+        setLoading(true);
+        return;
+    }
     if (!user) {
       router.push('/login');
       return;
@@ -36,24 +39,26 @@ export default function ProProfessionalsPage() {
             return;
         }
 
-        const professionalsQuery = query(
-            collection(firestore, 'users'), 
-            where('tenantId', '==', userProfile.tenantId),
-            where('profileType', '==', 'professional')
-        );
+        if (firestore) {
+            const professionalsQuery = query(
+                collection(firestore, 'users'), 
+                where('tenantId', '==', userProfile.tenantId),
+                where('profileType', '==', 'professional')
+            );
 
-        const unsubProfessionals = onSnapshot(professionalsQuery, (snapshot) => {
-            const fetchedProfessionals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
-            setProfessionals(fetchedProfessionals);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching professionals:", error);
-            setLoading(false);
-        });
+            const unsubProfessionals = onSnapshot(professionalsQuery, (snapshot) => {
+                const fetchedProfessionals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
+                setProfessionals(fetchedProfessionals);
+                setLoading(false);
+            }, (error) => {
+                console.error("Error fetching professionals:", error);
+                setLoading(false);
+            });
 
-        return () => {
-          unsubProfessionals();
-        };
+            return () => {
+              unsubProfessionals();
+            };
+        }
     } else if (!isUserLoading) {
         setLoading(false);
     }
@@ -134,5 +139,3 @@ export default function ProProfessionalsPage() {
     </AppLayout>
   );
 }
-
-    

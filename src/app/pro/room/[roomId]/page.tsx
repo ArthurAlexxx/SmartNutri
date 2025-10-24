@@ -40,7 +40,10 @@ export default function RoomDetailPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isUserLoading || !firestore) return;
+    if (isUserLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
       router.push('/login');
       return;
@@ -48,7 +51,7 @@ export default function RoomDetailPage() {
     
     let unsubRoom: Unsubscribe | undefined;
 
-    if (userProfile) {
+    if (userProfile && firestore) {
         if (userProfile.profileType !== 'professional') {
             router.push('/dashboard');
         }
@@ -240,5 +243,3 @@ export default function RoomDetailPage() {
     </AppLayout>
   );
 }
-
-    

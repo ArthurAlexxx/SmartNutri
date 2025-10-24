@@ -37,7 +37,10 @@ export default function ProDashboardPage() {
   const [loading, setLoading] = useState(true);
 
    useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading) {
+        setLoading(true);
+        return;
+    }
     if (!user) {
       router.push('/login');
       return;
@@ -54,22 +57,24 @@ export default function ProDashboardPage() {
         let unsubRooms: Unsubscribe | undefined;
         let unsubTenants: Unsubscribe | undefined;
 
-        if (isSuperAdmin) {
-            unsubTenants = onSnapshot(collection(firestore, 'tenants'), (snapshot) => {
-                setAllTenants(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant)));
-                setLoading(false);
+        if (firestore) {
+          if (isSuperAdmin) {
+              unsubTenants = onSnapshot(collection(firestore, 'tenants'), (snapshot) => {
+                  setAllTenants(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant)));
+                  setLoading(false);
+              });
+          } 
+          else if (userProfile.professionalRoomIds && userProfile.professionalRoomIds.length > 0) {
+            const roomsQuery = query(collection(firestore, 'rooms'), where('__name__', 'in', userProfile.professionalRoomIds));
+            unsubRooms = onSnapshot(roomsQuery, (snapshot) => {
+              const fetchedRooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
+              setAllRooms(fetchedRooms);
+              setLoading(false);
             });
-        } 
-        else if (userProfile.professionalRoomIds && userProfile.professionalRoomIds.length > 0) {
-          const roomsQuery = query(collection(firestore, 'rooms'), where('__name__', 'in', userProfile.professionalRoomIds));
-          unsubRooms = onSnapshot(roomsQuery, (snapshot) => {
-            const fetchedRooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
-            setAllRooms(fetchedRooms);
+          } else {
+            setAllRooms([]);
             setLoading(false);
-          });
-        } else {
-          setAllRooms([]);
-          setLoading(false);
+          }
         }
 
         return () => {
@@ -94,7 +99,7 @@ export default function ProDashboardPage() {
 
   const isSuperAdmin = userProfile?.role === 'super-admin';
 
-  if (loading || isUserLoading) {
+  if (isUserLoading || loading) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -218,5 +223,3 @@ interface Room {
     meals: any[];
   }
 }
-
-    

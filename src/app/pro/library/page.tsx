@@ -48,7 +48,10 @@ export default function ProLibraryPage() {
   const [isGuidelineModalOpen, setGuidelineModalOpen] = useState(false);
 
   useEffect(() => {
-    if (isUserLoading || !firestore) return;
+    if (isUserLoading) {
+        setLoading(true);
+        return;
+    }
     if (!user) {
         router.push('/login');
         return;
@@ -61,7 +64,7 @@ export default function ProLibraryPage() {
         }
 
         const tenantId = userProfile.tenantId;
-        if (!tenantId) {
+        if (!tenantId || !firestore) {
             setLoading(false);
             return;
         }
@@ -213,5 +216,3 @@ export default function ProLibraryPage() {
     </AppLayout>
   );
 }
-
-    
