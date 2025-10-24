@@ -7,18 +7,19 @@ import type { UserProfile } from '@/types/user';
 import type { HydrationEntry } from '@/types/hydration';
 import type { WeightLog } from '@/types/weight';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Download, TrendingUp, GlassWater, Weight } from 'lucide-react';
+import { Loader2, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { subDays, eachDayOfInterval, format, startOfDay } from 'date-fns';
 import AppLayout from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getLocalDateString } from '@/lib/date-utils';
-import { useAuth, useUser, useFirestore } from '@/firebase';
-import { doc, onSnapshot, Unsubscribe, query, collection, where, updateDoc } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { query, collection, where, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import SummaryCards from '@/components/summary-cards';
 import ChartsView from '@/components/analysis/charts-view';
+import { generateAnalysisInsights } from '@/ai/flows/analysis-flow';
+import InsightsCard from '@/components/analysis/insights-card';
 
 type Period = 7 | 15 | 30;
 
@@ -33,14 +34,22 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>(7);
 
-   useEffect(() => {
+  const [insights, setInsights] = useState<string[]>([]);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+
+  const handleError = useCallback((error: any, context: string) => {
+    console.error(`Error fetching ${context}:`, error);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
     if (isUserLoading) return;
     if (!user) {
       router.push('/login');
       return;
     }
 
-    setLoading(!userProfile); // Start loading if profile isn't ready
+    setLoading(!userProfile);
 
     let unsubMeals: Unsubscribe | undefined;
     let unsubHydration: Unsubscribe | undefined;
@@ -52,15 +61,15 @@ export default function AnalysisPage() {
       unsubMeals = onSnapshot(baseQuery('meal_entries'), (snapshot) => {
         setMealEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MealEntry)));
         setLoading(false);
-      }, () => setLoading(false));
+      }, (error) => handleError(error, 'meals'));
 
       unsubHydration = onSnapshot(baseQuery('hydration_entries'), (snapshot) => {
         setHydrationEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HydrationEntry)));
-      });
+      }, (error) => handleError(error, 'hydration'));
       
       unsubWeight = onSnapshot(baseQuery('weight_logs'), (snapshot) => {
         setWeightLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WeightLog)));
-      });
+      }, (error) => handleError(error, 'weight'));
     }
 
     return () => {
@@ -68,8 +77,7 @@ export default function AnalysisPage() {
       if (unsubHydration) unsubHydration();
       if (unsubWeight) unsubWeight();
     };
-
-  }, [user, isUserLoading, router, firestore, userProfile]);
+  }, [user, isUserLoading, router, firestore, userProfile, handleError]);
 
   
   const getDateFilteredData = useCallback((entries: {date: string}[], period: number) => {
@@ -99,7 +107,6 @@ export default function AnalysisPage() {
         { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 }
      );
      
-     // Get unique days to calculate the average correctly
      const uniqueDays = new Set(periodMeals.map(meal => meal.date)).size;
 
      return {
@@ -110,6 +117,28 @@ export default function AnalysisPage() {
      };
 
    }, [periodMeals]);
+
+  useEffect(() => {
+    if (periodMeals.length > 0 && userProfile) {
+        setLoadingInsights(true);
+        generateAnalysisInsights({
+            profile: userProfile,
+            mealEntries: periodMeals,
+            hydrationEntries: periodHydration,
+            weightLogs: periodWeight,
+        })
+        .then(result => {
+            setInsights(result.insights);
+        })
+        .catch(error => {
+            console.error("Failed to generate insights:", error);
+            setInsights([]);
+        })
+        .finally(() => {
+            setLoadingInsights(false);
+        });
+    }
+  }, [periodMeals, periodHydration, periodWeight, userProfile]);
 
 
   const chartData = useMemo(() => {
@@ -125,7 +154,7 @@ export default function AnalysisPage() {
         const dayIntake = dayHydration?.intake || 0;
         
         const relevantLogs = weightLogs
-            .filter(log => log.date <= dateStr)
+            .filter(log => new Date(log.date) <= day)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         const dayWeight = relevantLogs[0]?.weight || null;
 
@@ -162,6 +191,7 @@ export default function AnalysisPage() {
     
     return (
         <div className="w-full space-y-8">
+            <InsightsCard insights={insights} isLoading={loadingInsights} />
              <SummaryCards
                 totalNutrients={totalNutrients}
                 nutrientGoals={userProfile ? { calories: userProfile.calorieGoal || 2000, protein: userProfile.proteinGoal || 140 } : undefined}
@@ -189,7 +219,7 @@ export default function AnalysisPage() {
              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
                 <div className="animate-fade-in flex-1 text-center sm:text-left">
                     <h2 className="text-3xl font-bold text-foreground font-heading">Análise de Desempenho</h2>
-                    <p className="text-muted-foreground mt-1">Seu progresso e tendências ao longo do tempo.</p>
+                    <p className="text-muted-foreground mt-1">Seu progresso, tendências e insights gerados por IA.</p>
                 </div>
                  <div className='flex items-center gap-2'>
                     <div className="flex items-center gap-1 p-1 rounded-lg bg-muted">
