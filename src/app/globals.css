@@ -94,6 +94,9 @@
     text-align: left !important;
     padding-left: 0.75rem !important;
   }
+  .password-strength-bar {
+      transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+  }
 }
 
 @layer utilities {

@@ -23,6 +23,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { addDays } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   fullName: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
@@ -46,7 +47,70 @@ const generateShareCode = () => {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
-}
+};
+
+
+type StrengthLevel = 'Fraca' | 'Média' | 'Forte' | '';
+
+const PasswordStrengthMeter = ({ password }: { password?: string }) => {
+    const [strength, setStrength] = useState<StrengthLevel>('');
+    const [strengthValue, setStrengthValue] = useState(0);
+
+    const checkStrength = (pass: string) => {
+        let score = 0;
+        if (pass.length >= 6) score++;
+        if (/[a-zA-Z]/.test(pass)) score++;
+        if (/[0-9]/.test(pass)) score++;
+
+        setStrengthValue(score);
+
+        if (score === 3) {
+            setStrength('Forte');
+        } else if (score === 2) {
+            setStrength('Média');
+        } else if (score > 0) {
+            setStrength('Fraca');
+        } else {
+            setStrength('');
+        }
+    };
+
+    React.useEffect(() => {
+        if (password) {
+            checkStrength(password);
+        } else {
+            setStrength('');
+            setStrengthValue(0);
+        }
+    }, [password]);
+
+    const strengthColor =
+        strength === 'Forte' ? 'bg-green-500' :
+        strength === 'Média' ? 'bg-yellow-500' :
+        strength === 'Fraca' ? 'bg-red-500' :
+        'bg-gray-200';
+
+    return (
+        <div className="mt-1">
+            <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                 <div
+                    className={cn('h-1.5 rounded-full password-strength-bar', strengthColor)}
+                    style={{ width: `${(strengthValue / 3) * 100}%` }}
+                />
+            </div>
+            {strength && (
+                 <p className="text-xs mt-1 text-right">
+                    Força: <span className={cn(
+                        strength === 'Forte' && 'text-green-500',
+                        strength === 'Média' && 'text-yellow-500',
+                        strength === 'Fraca' && 'text-red-500',
+                    )}>{strength}</span>
+                </p>
+            )}
+        </div>
+    );
+};
+
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
@@ -63,7 +127,10 @@ export default function RegisterPage() {
       password: '',
       confirmPassword: '',
     },
+    mode: 'onTouched'
   });
+
+  const passwordValue = form.watch('password');
 
   const handleRegister = async (values: RegisterFormValues) => {
     setLoading(true);
@@ -195,6 +262,7 @@ export default function RegisterPage() {
                     <FormLabel>Senha</FormLabel>
                     <FormControl><Input type="password" placeholder="Mínimo 6 caracteres, com letras e números" {...field} /></FormControl>
                     <FormMessage />
+                    <PasswordStrengthMeter password={field.value} />
                   </FormItem>
                 )}
               />
