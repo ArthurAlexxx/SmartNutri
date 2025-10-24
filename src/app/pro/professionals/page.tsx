@@ -54,6 +54,8 @@ export default function ProProfessionalsPage() {
         return () => {
           unsubProfessionals();
         };
+    } else if (!isUserLoading) {
+        setLoading(false);
     }
   }, [user, userProfile, isUserLoading, router, firestore]);
   
@@ -132,3 +134,5 @@ export default function ProProfessionalsPage() {
     </AppLayout>
   );
 }
+
+    

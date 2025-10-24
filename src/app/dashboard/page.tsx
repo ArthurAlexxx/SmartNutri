@@ -43,13 +43,13 @@ export default function DashboardPage() {
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading) return; // Aguarda a verificação do usuário
     if (!user) {
       router.push('/login');
       return;
     }
     
-    // We can show the page as soon as the userProfile is available
+    // Mostra a página assim que o perfil do usuário estiver disponível
     if (userProfile !== undefined) {
       setLoading(false);
     }
@@ -59,7 +59,6 @@ export default function DashboardPage() {
     let unsubHydration: Unsubscribe | undefined;
 
     if (db) {
-      // The userProfile is now coming from the useUser hook, so no need for a separate listener here.
       if (userProfile?.patientRoomId) {
           const roomRef = doc(db, 'rooms', userProfile.patientRoomId);
           unsubRoom = onSnapshot(roomRef, (roomDoc) => {
@@ -275,3 +274,5 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
+
+    

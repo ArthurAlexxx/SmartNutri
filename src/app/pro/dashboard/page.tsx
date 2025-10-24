@@ -37,7 +37,7 @@ export default function ProDashboardPage() {
   const [loading, setLoading] = useState(true);
 
    useEffect(() => {
-    if (isUserLoading || !firestore) return;
+    if (isUserLoading) return;
     if (!user) {
       router.push('/login');
       return;
@@ -76,6 +76,8 @@ export default function ProDashboardPage() {
           if (unsubRooms) unsubRooms();
           if (unsubTenants) unsubTenants();
         };
+    } else if (!isUserLoading) {
+        setLoading(false);
     }
   }, [user, userProfile, isUserLoading, router, firestore]);
   
@@ -216,3 +218,5 @@ interface Room {
     meals: any[];
   }
 }
+
+    

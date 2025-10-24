@@ -53,33 +53,38 @@ export default function ProLibraryPage() {
         router.push('/login');
         return;
     }
-    if (userProfile?.profileType !== 'professional') {
-        router.push('/dashboard');
-        return;
-    }
-
-    const tenantId = userProfile.tenantId;
-    if (!tenantId) {
-        setLoading(false);
-        return;
-    }
-
-    const templatesQuery = query(collection(firestore, 'tenants', tenantId, 'plan_templates'), orderBy('name', 'asc'));
-    const unsubTemplates = onSnapshot(templatesQuery, (snapshot) => {
-        setPlanTemplates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PlanTemplate)));
-        setLoading(false);
-    }, () => setLoading(false));
     
-    const guidelinesQuery = query(collection(firestore, 'tenants', tenantId, 'guidelines'), orderBy('title', 'asc'));
-    const unsubGuidelines = onSnapshot(guidelinesQuery, (snapshot) => {
-        setGuidelines(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guideline)));
-        setLoading(false);
-    }, () => setLoading(false));
+    if(userProfile) {
+        if (userProfile.profileType !== 'professional') {
+            router.push('/dashboard');
+            return;
+        }
 
-    return () => {
-        unsubTemplates();
-        unsubGuidelines();
-    };
+        const tenantId = userProfile.tenantId;
+        if (!tenantId) {
+            setLoading(false);
+            return;
+        }
+
+        const templatesQuery = query(collection(firestore, 'tenants', tenantId, 'plan_templates'), orderBy('name', 'asc'));
+        const unsubTemplates = onSnapshot(templatesQuery, (snapshot) => {
+            setPlanTemplates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PlanTemplate)));
+            setLoading(false);
+        }, () => setLoading(false));
+        
+        const guidelinesQuery = query(collection(firestore, 'tenants', tenantId, 'guidelines'), orderBy('title', 'asc'));
+        const unsubGuidelines = onSnapshot(guidelinesQuery, (snapshot) => {
+            setGuidelines(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guideline)));
+            setLoading(false);
+        }, () => setLoading(false));
+
+        return () => {
+            unsubTemplates();
+            unsubGuidelines();
+        };
+    } else if (!isUserLoading) {
+        setLoading(false);
+    }
 
   }, [user, userProfile, isUserLoading, router, firestore]);
 
@@ -208,3 +213,5 @@ export default function ProLibraryPage() {
     </AppLayout>
   );
 }
+
+    

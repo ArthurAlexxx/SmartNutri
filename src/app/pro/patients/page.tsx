@@ -39,7 +39,6 @@ export default function ProPatientsPage() {
             return;
         }
 
-        // Once we have the professional's profile, fetch their rooms.
         if (userProfile.professionalRoomIds && userProfile.professionalRoomIds.length > 0 && firestore) {
             const roomsRef = collection(firestore, 'rooms');
             const q = query(roomsRef, where('professionalId', '==', user.uid));
@@ -53,17 +52,12 @@ export default function ProPatientsPage() {
                 setLoading(false);
             });
         } else {
-            // No rooms yet
             setRooms([]);
             setLoading(false);
         }
+    } else if (!isUserLoading) {
+        setLoading(false);
     }
-    
-    // Set loading to false if userProfile is loaded but they have no rooms
-    if(userProfile && !userProfile.professionalRoomIds?.length) {
-      setLoading(false);
-    }
-
 
     return () => {
       if (unsubRooms) unsubRooms();
@@ -133,3 +127,5 @@ export default function ProPatientsPage() {
     </AppLayout>
   );
 }
+
+    

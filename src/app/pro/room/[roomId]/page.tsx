@@ -48,19 +48,22 @@ export default function RoomDetailPage() {
     
     let unsubRoom: Unsubscribe | undefined;
 
-    // The userProfile is now coming directly from the useUser hook, so we don't need a separate listener.
-    if (userProfile && userProfile.profileType !== 'professional') {
-      router.push('/dashboard');
-    }
-    
-    unsubRoom = onSnapshot(doc(firestore, 'rooms', roomId), (doc) => {
-        if (doc.exists()) {
-            setRoom({ id: doc.id, ...doc.data() } as Room);
-        } else {
-            router.push('/pro/patients');
+    if (userProfile) {
+        if (userProfile.profileType !== 'professional') {
+            router.push('/dashboard');
         }
+        
+        unsubRoom = onSnapshot(doc(firestore, 'rooms', roomId), (doc) => {
+            if (doc.exists()) {
+                setRoom({ id: doc.id, ...doc.data() } as Room);
+            } else {
+                router.push('/pro/patients');
+            }
+            setLoading(false);
+        });
+    } else if (!isUserLoading) {
         setLoading(false);
-    });
+    }
 
     return () => {
         if (unsubRoom) unsubRoom();
@@ -237,3 +240,5 @@ export default function RoomDetailPage() {
     </AppLayout>
   );
 }
+
+    

@@ -104,7 +104,6 @@ export default function ProSettingsPage() {
   const { user, isUserLoading, userProfile, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
-  const [authChecked, setAuthChecked] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -124,36 +123,33 @@ export default function ProSettingsPage() {
         router.push('/login');
         return;
     }
-    if (userProfile === null) {
-        // Still loading profile, wait.
-        return;
-    }
     
-    // Security Check: Only allow admins and super-admins to access this page
-    if (userProfile.profileType !== 'professional' || !['admin', 'super-admin'].includes(userProfile.role || '')) {
-      toast({ title: 'Acesso Negado', description: 'Você não tem permissão para acessar esta página.', variant: 'destructive' });
-      router.push('/pro/dashboard');
-      return;
-    }
+    if (userProfile) {
+        if (userProfile.profileType !== 'professional' || !['admin', 'super-admin'].includes(userProfile.role || '')) {
+          toast({ title: 'Acesso Negado', description: 'Você não tem permissão para acessar esta página.', variant: 'destructive' });
+          router.push('/pro/dashboard');
+          return;
+        }
 
-    setAuthChecked(true);
+        const tenantIdToLoad = userProfile.role === 'super-admin' ? 'default' : userProfile.tenantId;
 
-    const tenantIdToLoad = userProfile.role === 'super-admin' ? 'default' : userProfile.tenantId;
-
-    if (firestore && tenantIdToLoad) {
-        const unsubConfig = getSiteConfig(firestore, tenantIdToLoad, (config) => {
-            form.reset({
-              ...config,
-              logo: {
-                ...config.logo,
-                text: config.logo.text || config.siteName,
-              }
+        if (firestore && tenantIdToLoad) {
+            const unsubConfig = getSiteConfig(firestore, tenantIdToLoad, (config) => {
+                form.reset({
+                  ...config,
+                  logo: {
+                    ...config.logo,
+                    text: config.logo.text || config.siteName,
+                  }
+                });
+                setLoading(false);
             });
+            return () => unsubConfig();
+        } else {
             setLoading(false);
-        });
-        return () => unsubConfig();
-    } else {
-        setLoading(false); // No tenantId, probably an error state, but stop loading.
+        }
+    } else if (!isUserLoading) {
+        setLoading(false);
     }
     
   }, [user, userProfile, isUserLoading, router, firestore, form, toast]);
@@ -168,7 +164,6 @@ export default function ProSettingsPage() {
         return;
     }
     
-    // If logo type is image, clear text, if text, clear imageUrl
     if (data.logo.type === 'image') {
       data.logo.text = '';
     } else {
@@ -216,7 +211,7 @@ export default function ProSettingsPage() {
         });
   };
 
-  if (loading || isUserLoading || !authChecked) {
+  if (loading || isUserLoading) {
     return (
       <AppLayout user={user} userProfile={userProfile} onProfileUpdate={onProfileUpdate}>
         <div className="flex w-full h-full flex-col bg-background items-center justify-center">
@@ -444,3 +439,5 @@ export default function ProSettingsPage() {
     </AppLayout>
   );
 }
+
+    

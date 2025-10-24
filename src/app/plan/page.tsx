@@ -36,7 +36,6 @@ export default function PlanPage() {
 
     let unsubRoom: Unsubscribe | undefined;
 
-    // We depend on the userProfile from the useUser hook, which is already live
     if (userProfile) {
         if (userProfile.patientRoomId) {
             const roomRef = doc(firestore, 'rooms', userProfile.patientRoomId);
@@ -186,3 +185,5 @@ export default function PlanPage() {
     </AppLayout>
   );
 }
+
+    
