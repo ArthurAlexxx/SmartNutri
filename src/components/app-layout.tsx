@@ -1,3 +1,4 @@
+
 // src/components/app-layout.tsx
 'use client';
 
@@ -241,9 +242,9 @@ export default function AppLayout({ user, userProfile, onProfileUpdate, children
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-muted/40 print:bg-white print:p-0 relative">
           {hasAccess ? children : <SubscriptionOverlay />}
-          {userProfile && userProfile.isNewUser && pathname === '/dashboard' && (
+          {userProfile && pathname === '/dashboard' && (
              <TutorialGuide 
-                isNewUser={userProfile.isNewUser} 
+                isNewUser={true} 
                 onComplete={() => onProfileUpdate({ isNewUser: false })}
             />
           )}
