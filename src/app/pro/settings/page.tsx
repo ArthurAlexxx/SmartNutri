@@ -101,7 +101,7 @@ const ImageUrlInput = ({ form, name, label }: { form: any; name: `heroSection.im
 
 
 export default function ProSettingsPage() {
-  const { user, isUserLoading, userProfile } = useUser();
+  const { user, isUserLoading, userProfile, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
   const [authChecked, setAuthChecked] = useState(false);
@@ -157,10 +157,6 @@ export default function ProSettingsPage() {
     }
     
   }, [user, userProfile, isUserLoading, router, firestore, form, toast]);
-
-  const handleProfileUpdate = useCallback((updatedProfile: Partial<UserProfile>) => {
-    // This is handled by the useUser hook now, no need to manage state here.
-  }, []);
 
   const onSubmit = async (data: SiteSettings) => {
     if (!user || !firestore || !userProfile) {
@@ -222,7 +218,7 @@ export default function ProSettingsPage() {
 
   if (loading || isUserLoading || !authChecked) {
     return (
-      <AppLayout user={user} userProfile={userProfile} onMealAdded={() => {}} onProfileUpdate={handleProfileUpdate}>
+      <AppLayout user={user} userProfile={userProfile} onProfileUpdate={onProfileUpdate}>
         <div className="flex w-full h-full flex-col bg-background items-center justify-center">
           <Loader2 className="h-16 w-16 animate-spin text-primary" />
           <p className="mt-4 text-muted-foreground">Carregando configurações...</p>
@@ -232,7 +228,7 @@ export default function ProSettingsPage() {
   }
 
   return (
-    <AppLayout user={user} userProfile={userProfile} onMealAdded={() => {}} onProfileUpdate={handleProfileUpdate}>
+    <AppLayout user={user} userProfile={userProfile} onProfileUpdate={onProfileUpdate}>
        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

@@ -16,12 +16,10 @@ import { useAuth, useUser, useFirestore } from '@/firebase';
 import { doc, onSnapshot, Unsubscribe, collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function ProPatientsPage() {
-  const auth = useAuth();
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -33,67 +31,52 @@ export default function ProPatientsPage() {
       return;
     }
 
-    let unsubProfile: Unsubscribe | undefined;
     let unsubRooms: Unsubscribe | undefined;
 
-    if (firestore) {
-      const userRef = doc(firestore, 'users', user.uid);
-      unsubProfile = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          const profileData = { id: doc.id, ...doc.data() } as UserProfile;
-           setUserProfile(profileData);
-           if (profileData.profileType !== 'professional') {
-             router.push('/dashboard');
-             return;
-           }
-
-           // Once we have the professional's profile, fetch their rooms.
-           if (profileData.professionalRoomIds && profileData.professionalRoomIds.length > 0) {
-                const roomsRef = collection(firestore, 'rooms');
-                const q = query(roomsRef, where('professionalId', '==', user.uid));
-
-                unsubRooms = onSnapshot(q, (snapshot) => {
-                    const fetchedRooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
-                    setRooms(fetchedRooms);
-                    setLoading(false);
-                }, (error) => {
-                    console.error("Error fetching rooms:", error);
-                    setLoading(false);
-                });
-           } else {
-               // No rooms yet
-               setRooms([]);
-               setLoading(false);
-           }
-
-        } else {
-             setLoading(false);
+    if (userProfile) {
+        if (userProfile.profileType !== 'professional') {
+            router.push('/dashboard');
+            return;
         }
-      });
+
+        // Once we have the professional's profile, fetch their rooms.
+        if (userProfile.professionalRoomIds && userProfile.professionalRoomIds.length > 0 && firestore) {
+            const roomsRef = collection(firestore, 'rooms');
+            const q = query(roomsRef, where('professionalId', '==', user.uid));
+
+            unsubRooms = onSnapshot(q, (snapshot) => {
+                const fetchedRooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
+                setRooms(fetchedRooms);
+                setLoading(false);
+            }, (error) => {
+                console.error("Error fetching rooms:", error);
+                setLoading(false);
+            });
+        } else {
+            // No rooms yet
+            setRooms([]);
+            setLoading(false);
+        }
+    }
+    
+    // Set loading to false if userProfile is loaded but they have no rooms
+    if(userProfile && !userProfile.professionalRoomIds?.length) {
+      setLoading(false);
     }
 
+
     return () => {
-      if (unsubProfile) unsubProfile();
       if (unsubRooms) unsubRooms();
     };
 
-  }, [user, isUserLoading, router, firestore]);
-
-  const handleProfileUpdate = useCallback((updatedProfile: Partial<UserProfile>) => {
-    setUserProfile(prevProfile => {
-        if (!prevProfile) return null;
-        return { ...prevProfile, ...updatedProfile };
-    });
-  }, []);
-
+  }, [user, userProfile, isUserLoading, router, firestore]);
 
   if (loading || isUserLoading) {
     return (
        <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={onProfileUpdate}
       >
         <div className="flex w-full h-full flex-col bg-background items-center justify-center">
           <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -107,8 +90,7 @@ export default function ProPatientsPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={onProfileUpdate}
     >
        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-8 animate-fade-in text-center sm:text-left gap-4">

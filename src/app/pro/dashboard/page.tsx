@@ -27,7 +27,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 
 export default function ProDashboardPage() {
-  const { user, userProfile, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -79,8 +79,6 @@ export default function ProDashboardPage() {
     }
   }, [user, userProfile, isUserLoading, router, firestore]);
   
-  const handleProfileUpdate = useCallback(() => {}, []);
-
   const totalPatients = allRooms.length;
 
   const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
@@ -194,8 +192,7 @@ export default function ProDashboardPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={onProfileUpdate}
     >
        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="mb-8 animate-fade-in text-center">

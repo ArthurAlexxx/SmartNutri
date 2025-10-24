@@ -19,7 +19,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { Button } from '@/components/ui/button';
 
 export default function PlanPage() {
-  const { user, userProfile, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
@@ -90,9 +90,6 @@ export default function PlanPage() {
     }
   }
 
-  const handleProfileUpdate = useCallback(() => {
-    // Ações de atualização de perfil já são gerenciadas pelo hook useUser
-  }, []);
 
   if (loading || isUserLoading) {
     return (
@@ -109,8 +106,7 @@ export default function PlanPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={onProfileUpdate}
     >
        <Sheet open={isChatOpen} onOpenChange={handleChatOpen}>
         <div className="flex flex-col gap-8">

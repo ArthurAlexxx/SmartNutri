@@ -15,7 +15,7 @@ import CreateProfessionalModal from '@/components/pro/create-professional-modal'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export default function ProProfessionalsPage() {
-  const { user, userProfile, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
@@ -56,18 +56,13 @@ export default function ProProfessionalsPage() {
         };
     }
   }, [user, userProfile, isUserLoading, router, firestore]);
-
-  const handleProfileUpdate = useCallback(() => {
-    // Managed by useUser hook, no local state update needed
-  }, []);
   
   if (loading || isUserLoading) {
     return (
        <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={onProfileUpdate}
       >
         <div className="flex w-full h-full flex-col bg-background items-center justify-center">
           <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -83,8 +78,7 @@ export default function ProProfessionalsPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={onProfileUpdate}
     >
        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-8 animate-fade-in text-center sm:text-left gap-4">

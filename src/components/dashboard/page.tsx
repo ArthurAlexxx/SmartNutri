@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx
 'use client';
 
@@ -26,7 +25,7 @@ import AddMealModal from '@/components/add-meal-modal';
 
 export default function DashboardPage() {
   const db = useFirestore();
-  const { user, userProfile, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
@@ -126,13 +125,18 @@ export default function DashboardPage() {
     }
   }, [db, toast]);
 
-  const handleProfileUpdate = useCallback(() => {
-    // This is now handled by the useUser hook globally
-    toast({
-      title: "Perfil Atualizado!",
-      description: "Suas informações foram salvas.",
-    });
-  }, [toast]);
+  const handleProfileUpdateWithToast = useCallback(async (updatedProfile: Partial<UserProfile>) => {
+    try {
+        await onProfileUpdate(updatedProfile);
+        toast({
+          title: "Perfil Atualizado!",
+          description: "Suas informações foram salvas.",
+        });
+    } catch(e) {
+        console.error(e);
+        toast({ title: "Erro", description: "Falha ao atualizar o perfil." });
+    }
+  }, [onProfileUpdate, toast]);
   
   const waterGoal = useMemo(() => room?.activePlan?.hydrationGoal || userProfile?.waterGoal || 2000, [room, userProfile]);
 
@@ -182,7 +186,7 @@ export default function DashboardPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={handleProfileUpdateWithToast}
     >
         <div className="flex flex-col gap-8">
             <div className='flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left animate-fade-in'>
@@ -199,7 +203,7 @@ export default function DashboardPage() {
                     <WaterTrackerCard
                         waterIntake={todayHydration?.intake || 0}
                         waterGoal={waterGoal}
-                        onWaterUpdate={handleWaterUpdate}
+                        onAddWaterClick={() => {}}
                     />
                 </div>
                 <div className="lg:col-span-2 space-y-8 order-1 lg:order-2">

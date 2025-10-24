@@ -82,7 +82,6 @@ const parseResponse = (responseText: string): { text: string; recipe?: Recipe } 
 
 
 export default function ChefPage() {
-  const auth = useAuth();
   const { user, isUserLoading, userProfile, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();

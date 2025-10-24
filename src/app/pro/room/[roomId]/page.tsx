@@ -25,9 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 
 
 export default function RoomDetailPage() {
-  const auth = useAuth();
-  const { user, isUserLoading } = useUser();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const [room, setRoom] = useState<Room | null>(null);
   const [mealLog, setMealLog] = useState<MealEntry[]>([]);
   const [hydrationLog, setHydrationLog] = useState<HydrationEntry | null>(null);
@@ -48,21 +46,13 @@ export default function RoomDetailPage() {
       return;
     }
     
-    let unsubUser: Unsubscribe | undefined;
     let unsubRoom: Unsubscribe | undefined;
 
-    unsubUser = onSnapshot(doc(firestore, 'users', user.uid), (doc) => {
-        if (doc.exists()) {
-            const profile = { id: doc.id, ...doc.data() } as UserProfile;
-            setUserProfile(profile);
-            if (profile.profileType !== 'professional') {
-                router.push('/dashboard');
-            }
-        } else {
-            setLoading(false);
-        }
-    });
-
+    // The userProfile is now coming directly from the useUser hook, so we don't need a separate listener.
+    if (userProfile && userProfile.profileType !== 'professional') {
+      router.push('/dashboard');
+    }
+    
     unsubRoom = onSnapshot(doc(firestore, 'rooms', roomId), (doc) => {
         if (doc.exists()) {
             setRoom({ id: doc.id, ...doc.data() } as Room);
@@ -73,11 +63,10 @@ export default function RoomDetailPage() {
     });
 
     return () => {
-        if (unsubUser) unsubUser();
         if (unsubRoom) unsubRoom();
     };
 
-  }, [user, isUserLoading, roomId, router, firestore]);
+  }, [user, userProfile, isUserLoading, roomId, router, firestore]);
 
    useEffect(() => {
     if (!room?.patientId || !firestore) return;
@@ -112,10 +101,6 @@ export default function RoomDetailPage() {
       if (unsubHydration) unsubHydration();
     };
   }, [room?.patientId, selectedDate, firestore]);
-
-  const handleProfileUpdate = useCallback((updatedProfile: Partial<UserProfile>) => {
-    setUserProfile(prev => (prev ? { ...prev, ...updatedProfile } : null));
-  }, []);
 
   const handleDeleteRoom = async () => {
     setIsDeleting(true);
@@ -181,8 +166,7 @@ export default function RoomDetailPage() {
     <AppLayout
       user={user}
       userProfile={userProfile}
-      onMealAdded={() => {}}
-      onProfileUpdate={handleProfileUpdate}
+      onProfileUpdate={onProfileUpdate}
     >
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col h-full">
         <div className="flex items-center justify-between gap-4 mb-8 animate-fade-in">

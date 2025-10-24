@@ -36,7 +36,7 @@ const EmptyState = ({ title, description, icon: Icon, onActionClick, buttonLabel
 );
 
 export default function ProLibraryPage() {
-  const { user, userProfile, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
@@ -85,7 +85,7 @@ export default function ProLibraryPage() {
 
   if (isUserLoading || loading) {
     return (
-      <AppLayout user={user} userProfile={userProfile} onMealAdded={() => {}} onProfileUpdate={() => {}}>
+      <AppLayout user={user} userProfile={userProfile} onProfileUpdate={onProfileUpdate}>
         <div className="flex w-full h-full flex-col bg-background items-center justify-center">
             <Loader2 className="h-16 w-16 animate-spin text-primary" />
             <p className="mt-4 text-muted-foreground">Carregando biblioteca...</p>
@@ -98,8 +98,7 @@ export default function ProLibraryPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={() => {}}
+        onProfileUpdate={onProfileUpdate}
     >
        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="mb-8 animate-fade-in text-center">
