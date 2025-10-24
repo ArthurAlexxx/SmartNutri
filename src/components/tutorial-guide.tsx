@@ -23,14 +23,15 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
 
   // Load viewed steps from localStorage on initial mount
   useEffect(() => {
-    try {
-      const savedSteps = localStorage.getItem(VIEWED_STEPS_KEY);
-      if (savedSteps) {
-        setViewedSteps(new Set(JSON.parse(savedSteps)));
-      }
-    } catch (error) {
-      console.error("Failed to load tutorial progress:", error);
-    }
+    // For testing, we are disabling localStorage to always show the tutorial.
+    // try {
+    //   const savedSteps = localStorage.getItem(VIEWED_STEPS_KEY);
+    //   if (savedSteps) {
+    //     setViewedSteps(new Set(JSON.parse(savedSteps)));
+    //   }
+    // } catch (error) {
+    //   console.error("Failed to load tutorial progress:", error);
+    // }
   }, []);
 
   // Effect to find the current step and target element whenever the page or progress changes
@@ -59,11 +60,12 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
     // Mark current step as viewed
     const newViewedSteps = new Set(viewedSteps).add(currentStep.elementId);
     
-    try {
-        localStorage.setItem(VIEWED_STEPS_KEY, JSON.stringify(Array.from(newViewedSteps)));
-    } catch (error) {
-        console.error("Failed to save tutorial progress:", error);
-    }
+    // For testing, we are disabling localStorage to always show the tutorial.
+    // try {
+    //     localStorage.setItem(VIEWED_STEPS_KEY, JSON.stringify(Array.from(newViewedSteps)));
+    // } catch (error) {
+    //     console.error("Failed to save tutorial progress:", error);
+    // }
     
     setViewedSteps(newViewedSteps);
     // The useEffect will then automatically find the next available step on the page
@@ -72,11 +74,12 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
   // Function to skip the entire tutorial
   const handleSkip = () => {
     const allStepIds = new Set(tutorialSteps.map(step => step.elementId));
-     try {
-        localStorage.setItem(VIEWED_STEPS_KEY, JSON.stringify(Array.from(allStepIds)));
-    } catch (error) {
-        console.error("Failed to save tutorial progress:", error);
-    }
+    // For testing, we are disabling localStorage to always show the tutorial.
+    //  try {
+    //     localStorage.setItem(VIEWED_STEPS_KEY, JSON.stringify(Array.from(allStepIds)));
+    // } catch (error) {
+    //     console.error("Failed to save tutorial progress:", error);
+    // }
     setViewedSteps(allStepIds);
     setCurrentStep(null);
     setTargetElement(null);
