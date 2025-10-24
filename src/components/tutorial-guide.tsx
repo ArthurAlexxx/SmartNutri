@@ -6,86 +6,91 @@ import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover'
 import { Button } from './ui/button';
 import { ArrowRight, Check, X } from 'lucide-react';
 import { tutorialSteps, type TutorialStep } from '@/lib/tutorial-steps';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 interface TutorialGuideProps {
   isNewUser: boolean;
   onComplete: () => void;
 }
 
-const TUTORIAL_STORAGE_KEY = 'nutrismart_tutorial_step';
+const VIEWED_STEPS_KEY = 'nutrismart_viewed_tutorial_steps';
 
 export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuideProps) {
-  const [globalStepIndex, setGlobalStepIndex] = useState(0);
+  const [currentStep, setCurrentStep] = useState<TutorialStep | null>(null);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
-  const router = useRouter();
+  const [viewedSteps, setViewedSteps] = useState<Set<string>>(new Set());
   const pathname = usePathname();
 
+  // Load viewed steps from localStorage on initial mount
   useEffect(() => {
     try {
-      const savedStep = localStorage.getItem(TUTORIAL_STORAGE_KEY);
-      const initialStep = savedStep ? parseInt(savedStep, 10) : 0;
-      if (initialStep < tutorialSteps.length) {
-        setGlobalStepIndex(initialStep);
-      } else {
-        // Tutorial was already completed
-        handleComplete(true); // silent complete
+      const savedSteps = localStorage.getItem(VIEWED_STEPS_KEY);
+      if (savedSteps) {
+        setViewedSteps(new Set(JSON.parse(savedSteps)));
       }
     } catch (error) {
-      // If localStorage is unavailable, just start from the beginning
-      setGlobalStepIndex(0);
+      console.error("Failed to load tutorial progress:", error);
     }
   }, []);
 
-  const currentPageSteps = tutorialSteps.filter(step => step.path === pathname);
-  const currentStep = tutorialSteps[globalStepIndex];
-  
-  const findElement = useCallback(() => {
-    if (currentStep && currentStep.path === pathname) {
-      const element = document.getElementById(currentStep.elementId);
+  // Effect to find the current step and target element whenever the page or progress changes
+  useEffect(() => {
+    // Find the first step on the current page that has NOT been viewed yet
+    const nextStepOnPage = tutorialSteps.find(step => 
+      step.path === pathname && !viewedSteps.has(step.elementId)
+    );
+    
+    if (nextStepOnPage) {
+      setCurrentStep(nextStepOnPage);
+      // Attempt to find the element for the current step
+      const element = document.getElementById(nextStepOnPage.elementId);
       setTargetElement(element);
     } else {
+      // No more steps for this page, or no steps at all
+      setCurrentStep(null);
       setTargetElement(null);
     }
-  }, [currentStep, pathname]);
+  }, [pathname, viewedSteps]);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(findElement, 150);
-    return () => clearTimeout(timeoutId);
-  }, [globalStepIndex, pathname, findElement]);
-
+  // Function to mark a step as viewed and move to the next
   const handleNext = () => {
-    const nextIndex = globalStepIndex + 1;
-    if (nextIndex >= tutorialSteps.length) {
-      handleComplete();
-    } else {
-      localStorage.setItem(TUTORIAL_STORAGE_KEY, String(nextIndex));
-      setGlobalStepIndex(nextIndex);
+    if (!currentStep) return;
 
-      const nextStepInfo = tutorialSteps[nextIndex];
-      if (nextStepInfo.path && pathname !== nextStepInfo.path) {
-        router.push(nextStepInfo.path);
-      }
-    }
-  };
-
-  const handleComplete = (silently = false) => {
-    try {
-      localStorage.setItem(TUTORIAL_STORAGE_KEY, String(tutorialSteps.length));
-    } catch (error) {}
+    // Mark current step as viewed
+    const newViewedSteps = new Set(viewedSteps).add(currentStep.elementId);
     
-    setTargetElement(null);
-    setGlobalStepIndex(tutorialSteps.length);
-    if (!silently) {
-      onComplete();
+    try {
+        localStorage.setItem(VIEWED_STEPS_KEY, JSON.stringify(Array.from(newViewedSteps)));
+    } catch (error) {
+        console.error("Failed to save tutorial progress:", error);
     }
+    
+    setViewedSteps(newViewedSteps);
+    // The useEffect will then automatically find the next available step on the page
   };
+
+  // Function to skip the entire tutorial
+  const handleSkip = () => {
+    const allStepIds = new Set(tutorialSteps.map(step => step.elementId));
+     try {
+        localStorage.setItem(VIEWED_STEPS_KEY, JSON.stringify(Array.from(allStepIds)));
+    } catch (error) {
+        console.error("Failed to save tutorial progress:", error);
+    }
+    setViewedSteps(allStepIds);
+    setCurrentStep(null);
+    setTargetElement(null);
+    onComplete();
+  };
+  
+  const allStepsOnPage = tutorialSteps.filter(step => step.path === pathname);
+  const currentStepIndexOnPage = allStepsOnPage.findIndex(step => step.elementId === currentStep?.elementId);
+  const isLastStepOnPage = currentStepIndexOnPage === allStepsOnPage.length - 1;
+
 
   if (!isNewUser || !currentStep || !targetElement) {
     return null;
   }
-
-  const isLastStep = globalStepIndex === tutorialSteps.length - 1;
 
   return (
     <Popover open={true}>
@@ -116,16 +121,16 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
             <p className="text-sm text-muted-foreground">{currentStep.description}</p>
           </div>
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => handleComplete()}>
+            <Button variant="ghost" size="sm" onClick={handleSkip}>
               <X className="mr-1 h-4 w-4" />
               Pular
             </Button>
              <div className='text-xs text-muted-foreground'>
-                {globalStepIndex + 1} / {tutorialSteps.length}
+                {currentStepIndexOnPage + 1} / {allStepsOnPage.length}
             </div>
             <Button size="sm" onClick={handleNext}>
-              {isLastStep ? 'Finalizar' : 'Próximo'}
-              {isLastStep ? <Check className="ml-1 h-4 w-4" /> : <ArrowRight className="ml-1 h-4 w-4" />}
+              {isLastStepOnPage ? 'Finalizar' : 'Próximo'}
+              {isLastStepOnPage ? <Check className="ml-1 h-4 w-4" /> : <ArrowRight className="ml-1 h-4 w-4" />}
             </Button>
           </div>
         </div>
