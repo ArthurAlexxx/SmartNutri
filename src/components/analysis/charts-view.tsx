@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DashboardCharts } from '@/components/dashboard-charts';
 import { TrendingUp, GlassWater, Weight } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface ChartsViewProps {
   caloriesData: any[];
@@ -12,43 +13,51 @@ interface ChartsViewProps {
 
 export default function ChartsView({ caloriesData, hydrationData, weightData }: ChartsViewProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <Card className="shadow-sm rounded-2xl animate-fade-in lg:col-span-3">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-semibold text-lg">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Consumo de Calorias
-          </CardTitle>
-          <CardDescription>Sua ingestão de calorias ao longo do período selecionado.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DashboardCharts chartType="calories" data={caloriesData} />
-        </CardContent>
-      </Card>
-      <Card className="shadow-sm rounded-2xl animate-fade-in lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-semibold text-lg">
-            <Weight className="h-5 w-5 text-primary" />
-            Acompanhamento de Peso
-          </CardTitle>
-          <CardDescription>Sua evolução de peso ao longo do período selecionado.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DashboardCharts chartType="weight" data={weightData} />
-        </CardContent>
-      </Card>
-       <Card className="shadow-sm rounded-2xl animate-fade-in">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-semibold text-lg">
-            <GlassWater className="h-5 w-5 text-primary" />
-            Consumo de Água
-          </CardTitle>
-          <CardDescription>Sua ingestão de água diária.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DashboardCharts chartType="hydration" data={hydrationData} />
-        </CardContent>
-      </Card>
-    </div>
+    <Accordion type="single" collapsible defaultValue="calories" className="w-full space-y-4">
+      <AccordionItem value="calories" className="border rounded-2xl bg-card shadow-sm">
+        <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
+          <div className="flex items-center gap-3">
+             <div className="flex items-center justify-center h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/50">
+                <TrendingUp className="h-5 w-5 text-orange-500" />
+            </div>
+            <span>Consumo de Calorias</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="p-6 pt-0">
+            <p className="text-muted-foreground mb-4">Sua ingestão de calorias ao longo do período selecionado.</p>
+            <DashboardCharts chartType="calories" data={caloriesData} />
+        </AccordionContent>
+      </AccordionItem>
+
+      <AccordionItem value="weight" className="border rounded-2xl bg-card shadow-sm">
+        <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
+           <div className="flex items-center gap-3">
+             <div className="flex items-center justify-center h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/50">
+                <Weight className="h-5 w-5 text-red-500" />
+            </div>
+            <span>Acompanhamento de Peso</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="p-6 pt-0">
+             <p className="text-muted-foreground mb-4">Sua evolução de peso ao longo do período selecionado.</p>
+            <DashboardCharts chartType="weight" data={weightData} />
+        </AccordionContent>
+      </AccordionItem>
+
+      <AccordionItem value="hydration" className="border rounded-2xl bg-card shadow-sm">
+        <AccordionTrigger className="p-6 text-lg font-semibold hover:no-underline">
+           <div className="flex items-center gap-3">
+             <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/50">
+                <GlassWater className="h-5 w-5 text-blue-500" />
+            </div>
+            <span>Consumo de Água</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="p-6 pt-0">
+             <p className="text-muted-foreground mb-4">Sua ingestão diária de água ao longo do tempo.</p>
+            <DashboardCharts chartType="hydration" data={hydrationData} />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
