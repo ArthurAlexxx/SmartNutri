@@ -1,4 +1,3 @@
-
 // src/components/logo-display.tsx
 import Image from 'next/image';
 import type { SiteConfig } from '@/lib/site-config-schema';
@@ -16,12 +15,12 @@ export const LogoDisplay = ({ logo, siteName }: LogoDisplayProps) => {
   if (logo.type === 'text' && logo.text && logo.font) {
     return (
       <span
-        className="text-2xl font-bold text-primary-foreground"
+        className="text-2xl font-bold"
         style={{ fontFamily: logoFonts[logo.font] }}
       >
         {logo.text}
       </span>
     );
   }
-  return <span className="text-lg font-bold text-primary-foreground">{siteName}</span>; // Fallback
+  return <span className="text-lg font-bold">{siteName}</span>; // Fallback
 };

@@ -1,4 +1,3 @@
-
 // src/app/login/page.tsx
 'use client';
 
@@ -78,16 +77,16 @@ export default function LoginPage() {
             fill
             className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-0 bg-primary/90" />
           <div className="relative z-20 flex items-center text-lg font-medium text-white">
             {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
           </div>
           <div className="relative z-20 mt-auto max-w-md">
             <blockquote className="space-y-2">
-              <p className="text-lg text-white">
+              <p className="text-lg text-primary-foreground/90">
                 &ldquo;Cuidar da sua saúde hoje dá mais vida ao seu futuro. Cada escolha conta.&rdquo;
               </p>
-              <footer className="text-sm text-white/80">Equipe NutriSmart</footer>
+              <footer className="text-sm text-primary-foreground/80">Equipe NutriSmart</footer>
             </blockquote>
           </div>
         </div>
