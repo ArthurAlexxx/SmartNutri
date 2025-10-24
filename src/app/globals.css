@@ -90,6 +90,10 @@
   section {
     @apply w-full;
   }
+  input[type='number'] {
+    text-align: left !important;
+    padding-left: 0.75rem !important;
+  }
 }
 
 @layer utilities {
