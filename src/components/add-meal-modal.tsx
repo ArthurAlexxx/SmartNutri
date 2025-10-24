@@ -1,4 +1,3 @@
-
 // src/components/add-meal-modal.tsx
 'use client';
 
@@ -17,7 +16,7 @@ import { getNutritionalInfo } from '@/app/actions/meal-actions';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { MealData, MealEntry } from '@/types/meal';
-import { ScrollArea } from './ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const foodItemSchema = z.object({
