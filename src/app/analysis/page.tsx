@@ -24,7 +24,7 @@ import ChartsView from '@/components/analysis/charts-view';
 type Period = 7 | 15 | 30;
 
 export default function AnalysisPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading, userProfile, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
@@ -32,7 +32,6 @@ export default function AnalysisPage() {
   const [hydrationEntries, setHydrationEntries] = useState<HydrationEntry[]>([]);
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [period, setPeriod] = useState<Period>(7);
 
    useEffect(() => {
@@ -42,60 +41,37 @@ export default function AnalysisPage() {
       return;
     }
 
-    let unsubProfile: Unsubscribe | undefined;
+    setLoading(!userProfile); // Start loading if profile isn't ready
+
     let unsubMeals: Unsubscribe | undefined;
     let unsubHydration: Unsubscribe | undefined;
     let unsubWeight: Unsubscribe | undefined;
 
     if (firestore) {
-      const userRef = doc(firestore, 'users', user.uid);
-      unsubProfile = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          const profileData = { id: doc.id, ...doc.data() } as UserProfile;
-          setUserProfile(profileData);
-        } else {
-          console.error("User profile not found in Firestore.");
-        }
+      const baseQuery = (collectionName: string) => query(collection(firestore, collectionName), where('userId', '==', user.uid));
+
+      unsubMeals = onSnapshot(baseQuery('meal_entries'), (snapshot) => {
+        setMealEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MealEntry)));
         setLoading(false);
       }, () => setLoading(false));
 
-      const baseQuery = (collectionName: string) => query(collection(firestore, collectionName), where('userId', '==', user.uid));
-
-      // Subscribe to meal entries
-      unsubMeals = onSnapshot(baseQuery('meal_entries'), (snapshot) => {
-        setMealEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MealEntry)));
-      });
-
-      // Subscribe to hydration entries
       unsubHydration = onSnapshot(baseQuery('hydration_entries'), (snapshot) => {
         setHydrationEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HydrationEntry)));
       });
       
-      // Subscribe to weight logs
       unsubWeight = onSnapshot(baseQuery('weight_logs'), (snapshot) => {
         setWeightLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WeightLog)));
       });
-
     }
 
     return () => {
-      if (unsubProfile) unsubProfile();
       if (unsubMeals) unsubMeals();
       if (unsubHydration) unsubHydration();
       if (unsubWeight) unsubWeight();
     };
 
-  }, [user, isUserLoading, router, firestore]);
+  }, [user, isUserLoading, router, firestore, userProfile]);
 
-  const handleProfileUpdate = useCallback((updatedProfile: Partial<UserProfile>) => {
-    if (!user || !firestore) return;
-    const userRef = doc(firestore, 'users', user.uid);
-    updateDoc(userRef, updatedProfile).then(() => {
-      setUserProfile(prevProfile => prevProfile ? { ...prevProfile, ...updatedProfile } : null);
-    }).catch(error => {
-       console.error("Error updating profile:", error);
-    });
-  }, [user, firestore]);
   
   const getDateFilteredData = useCallback((entries: {date: string}[], period: number) => {
     const today = startOfDay(new Date());
@@ -109,16 +85,32 @@ export default function AnalysisPage() {
   const periodHydration = useMemo(() => getDateFilteredData(hydrationEntries, period), [hydrationEntries, period, getDateFilteredData]);
   const periodWeight = useMemo(() => getDateFilteredData(weightLogs, period), [weightLogs, period, getDateFilteredData]);
     
-   const totalNutrients = useMemo(() => periodMeals.reduce(
-    (acc, meal) => {
-        acc.calorias += meal.mealData.totais.calorias / period;
-        acc.proteinas += meal.mealData.totais.proteinas / period;
-        acc.carboidratos += meal.mealData.totais.carboidratos / period;
-        acc.gorduras += meal.mealData.totais.gorduras / period;
-        return acc;
-    },
-    { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 }
-  ), [periodMeals, period]);
+   const totalNutrients = useMemo(() => {
+     if (periodMeals.length === 0) {
+        return { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 };
+     }
+     const totals = periodMeals.reduce(
+        (acc, meal) => {
+            acc.calorias += meal.mealData.totais.calorias;
+            acc.proteinas += meal.mealData.totais.proteinas;
+            acc.carboidratos += meal.mealData.totais.carboidratos;
+            acc.gorduras += meal.mealData.totais.gorduras;
+            return acc;
+        },
+        { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 }
+     );
+     
+     // Get unique days to calculate the average correctly
+     const uniqueDays = new Set(periodMeals.map(meal => meal.date)).size;
+
+     return {
+        calorias: totals.calorias / uniqueDays,
+        proteinas: totals.proteinas / uniqueDays,
+        carboidratos: totals.carboidratos / uniqueDays,
+        gorduras: totals.gorduras / uniqueDays,
+     };
+
+   }, [periodMeals]);
 
 
   const chartData = useMemo(() => {
@@ -133,7 +125,6 @@ export default function AnalysisPage() {
         const dayHydration = hydrationEntries.find(entry => entry.date === dateStr);
         const dayIntake = dayHydration?.intake || 0;
         
-        // For weight, find the last log on or before the current day in the interval
         const relevantLogs = weightLogs
             .filter(log => log.date <= dateStr)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -145,12 +136,11 @@ export default function AnalysisPage() {
             intake: dayIntake,
             weight: dayWeight,
         };
-    }).reverse(); // Reverse to show most recent first on the chart
+    }).reverse();
   }, [mealEntries, hydrationEntries, weightLogs, period]);
 
-  // Fill in null weight values with the last known weight for a smoother chart
   const weightChartData = useMemo(() => {
-      let lastKnownWeight: number | null = userProfile?.weight || null; // Start with the profile's current weight
+      let lastKnownWeight: number | null = userProfile?.weight || null;
       const filledData = [...chartData].reverse().map(dataPoint => {
           if (dataPoint.weight !== null) {
               lastKnownWeight = dataPoint.weight;
@@ -194,8 +184,7 @@ export default function AnalysisPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={(meal) => setMealEntries(prev => [...prev, meal])}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={onProfileUpdate}
     >
         <div className="flex flex-col gap-8 print-container">
              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">

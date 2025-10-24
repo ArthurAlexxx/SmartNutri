@@ -108,26 +108,19 @@ export default function AppLayout({ user, userProfile, onProfileUpdate, children
   const isSuperAdmin = userProfile?.role === 'super-admin';
   
   const checkAccess = () => {
-    // Profissionais e admins sempre têm acesso a todas as funcionalidades para seu uso pessoal
     if (isProfessional) return true;
 
-    // Lógica para pacientes normais
     const isPremiumFeature = navItemsPatient.find(item => pathname.startsWith(item.href))?.premium || false;
     if (!isPremiumFeature) return true;
 
-    // Conectado a um profissional? Acesso total.
     if (userProfile?.patientRoomId) return true;
     
-    // Status da assinatura?
     const status = userProfile?.subscriptionStatus;
     const endsAt = userProfile?.subscriptionEndsAt?.toDate();
 
     if (status === 'active' && endsAt && endsAt > new Date()) return true;
-
-    const trialEndsAt = userProfile?.trialEndsAt?.toDate();
-    if (status === 'trial' && trialEndsAt && trialEndsAt > new Date()) return true;
     
-    return false; // Bloquear acesso por padrão
+    return false; 
   };
 
   const hasAccess = checkAccess();

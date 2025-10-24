@@ -27,7 +27,7 @@ import WaterTrackerModal from '@/components/water-tracker-modal';
 
 export default function DashboardPage() {
   const db = useFirestore();
-  const { user, userProfile, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
@@ -128,13 +128,18 @@ export default function DashboardPage() {
     }
   }, [db, toast]);
 
-  const handleProfileUpdate = useCallback(() => {
-    // This is now handled by the useUser hook globally
-    toast({
-      title: "Perfil Atualizado!",
-      description: "Suas informações foram salvas.",
-    });
-  }, [toast]);
+  const handleProfileUpdateWithToast = useCallback(async (updatedProfile: Partial<UserProfile>) => {
+    try {
+        await onProfileUpdate(updatedProfile);
+        toast({
+          title: "Perfil Atualizado!",
+          description: "Suas informações foram salvas.",
+        });
+    } catch(e) {
+        console.error(e);
+        toast({ title: "Erro", description: "Falha ao atualizar o perfil." });
+    }
+  }, [onProfileUpdate, toast]);
   
   const waterGoal = useMemo(() => room?.activePlan?.hydrationGoal || userProfile?.waterGoal || 2000, [room, userProfile]);
 
@@ -159,8 +164,8 @@ export default function DashboardPage() {
     (acc, meal) => {
         acc.calorias += meal.mealData.totais.calorias;
         acc.proteinas += meal.mealData.totais.proteinas;
-        acc.carboidratos += meal.mealData.totais.carboidratos;
-        acc.gorduras += meal.mealData.totais.gorduras;
+        acc.carboidratos += meal.mealData.totais.carboidratos || 0;
+        acc.gorduras += meal.mealData.totais.gorduras || 0;
         return acc;
     },
     { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 }
@@ -168,7 +173,7 @@ export default function DashboardPage() {
 
   const nutrientGoals = useMemo(() => ({
     calories: room?.activePlan?.calorieGoal || userProfile?.calorieGoal || 2000,
-    protein: room?.activePlan?.calorieGoal ? (room.activePlan.calorieGoal * 0.35) / 4 : userProfile?.proteinGoal || 140,
+    protein: room?.activePlan?.proteinGoal || userProfile?.proteinGoal || 140,
   }), [room, userProfile]);
 
   if (loading || isUserLoading) {
@@ -184,7 +189,7 @@ export default function DashboardPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={handleProfileUpdateWithToast}
     >
         <div className="flex flex-col gap-8">
             <div className='flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left animate-fade-in'>

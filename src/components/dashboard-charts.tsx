@@ -50,12 +50,10 @@ interface DashboardChartsProps {
     data: any[];
 }
 
-// Helper para gerar os ticks do eixo Y
 const generateTicks = (data: any[], key: string, step: number, minMax: number) => {
     if (!data || data.length === 0) return [0, minMax];
     
     let maxValue = Math.max(...data.map(item => item[key] || 0));
-    // Se o valor máximo for menor que a meta mínima, definimos a meta mínima como o teto.
     if (maxValue < minMax) {
       maxValue = minMax;
     }
@@ -72,7 +70,7 @@ const generateTicks = (data: any[], key: string, step: number, minMax: number) =
 
 export function DashboardCharts({ chartType, data }: DashboardChartsProps) {
   if (chartType === 'calories') {
-     const calorieTicks = generateTicks(data, 'calories', 200, 1000); // Mínimo de 1000kcal no gráfico
+     const calorieTicks = generateTicks(data, 'calories', 200, 1000);
 
     return (
        <ChartContainer
@@ -89,7 +87,7 @@ export function DashboardCharts({ chartType, data }: DashboardChartsProps) {
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            tickFormatter={(value) => value.slice(0, 5)} // Exibe apenas DD/MM
+            tickFormatter={(value) => value.slice(0, 5)}
           />
            <YAxis 
             tickLine={false}
@@ -129,7 +127,7 @@ export function DashboardCharts({ chartType, data }: DashboardChartsProps) {
   }
   
   if (chartType === 'hydration') {
-     const hydrationTicks = generateTicks(data, 'intake', 250, 1000); // Mínimo de 1000ml no gráfico
+     const hydrationTicks = generateTicks(data, 'intake', 250, 1000);
     return (
       <ChartContainer config={hydrationChartConfig} className="min-h-[250px] w-full">
         <ResponsiveContainer width="100%" height={250}>
@@ -151,7 +149,7 @@ export function DashboardCharts({ chartType, data }: DashboardChartsProps) {
   }
 
   if (chartType === 'weight') {
-    const weightTicks = generateTicks(data, 'weight', 5, 60); // Mínimo de 60kg
+    const weightTicks = generateTicks(data, 'weight', 5, 60);
     return (
        <ChartContainer
         config={weightChartConfig}

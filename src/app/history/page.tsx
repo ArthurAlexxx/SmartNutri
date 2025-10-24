@@ -28,7 +28,7 @@ import { useAuth, useUser, useFirestore } from '@/firebase';
 
 export default function HistoryPage() {
   const auth = useAuth();
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading, userProfile, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
@@ -38,7 +38,6 @@ export default function HistoryPage() {
   const [allMealEntries, setAllMealEntries] = useState<MealEntry[]>([]);
   const [allHydrationEntries, setAllHydrationEntries] = useState<HydrationEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -48,22 +47,16 @@ export default function HistoryPage() {
       return;
     }
 
-    let unsubProfile: Unsubscribe | undefined;
+    setLoading(!userProfile);
+
     let unsubMeals: Unsubscribe | undefined;
     let unsubHydration: Unsubscribe | undefined;
 
     if (firestore) {
-      const userRef = doc(firestore, 'users', user.uid);
-      unsubProfile = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          setUserProfile({ id: doc.id, ...doc.data() } as UserProfile);
-        }
-        setLoading(false);
-      });
-
       const mealsQuery = query(collection(firestore, 'meal_entries'), where('userId', '==', user.uid));
       unsubMeals = onSnapshot(mealsQuery, (snapshot) => {
         setAllMealEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MealEntry)));
+        setLoading(false);
       });
 
       const hydrationQuery = query(collection(firestore, 'hydration_entries'), where('userId', '==', user.uid));
@@ -73,12 +66,11 @@ export default function HistoryPage() {
     }
 
     return () => {
-      if (unsubProfile) unsubProfile();
       if (unsubMeals) unsubMeals();
       if (unsubHydration) unsubHydration();
     };
 
-  }, [user, isUserLoading, router, firestore]);
+  }, [user, isUserLoading, router, firestore, userProfile]);
   
   const { mealEntries, hydrationEntries } = useMemo(() => {
     if (viewMode === 'day' && selectedDate) {
@@ -99,12 +91,10 @@ export default function HistoryPage() {
   }, [viewMode, selectedDate, selectedMonth, allMealEntries, allHydrationEntries]);
 
 
-  const handleProfileUpdate = useCallback((updatedProfile: Partial<UserProfile>) => {
-    setUserProfile(prevProfile => {
-        if (!prevProfile) return null;
-        return { ...prevProfile, ...updatedProfile };
-    });
-  }, []);
+  const handleProfileUpdateWithToast = useCallback(async (updatedProfile: Partial<UserProfile>) => {
+    await onProfileUpdate(updatedProfile);
+    toast({ title: "Perfil Atualizado", description: "Suas informações foram salvas." });
+  }, [onProfileUpdate, toast]);
 
   const handleMealDeleted = useCallback(async (entryId: string) => {
     if (!firestore) return;
@@ -129,13 +119,13 @@ export default function HistoryPage() {
         (acc, entry) => {
             acc.calorias += entry.mealData.totais.calorias;
             acc.proteinas += entry.mealData.totais.proteinas;
-            acc.carboidratos += entry.mealData.totais.carboidratos;
-            acc.gorduras += entry.mealData.totais.gorduras;
+            acc.carboidratos += entry.mealData.totais.carboidratos || 0;
+            acc.gorduras += entry.mealData.totais.gorduras || 0;
             return acc;
         },
         { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 }
     );
-    return { dailyTotals: totals, monthlyTotals: totals }; // Both are same now based on filtered entries
+    return { dailyTotals: totals, monthlyTotals: totals }; 
   }, [mealEntries]);
 
   const dailyHydration = hydrationEntries.length > 0 ? hydrationEntries[0] : null;
@@ -158,8 +148,7 @@ export default function HistoryPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={handleProfileUpdateWithToast}
     >
         <div className="flex flex-col gap-8">
             <div className="mb-2 animate-fade-in text-center">

@@ -37,73 +37,56 @@ const RecipeSchema = z.object({
 // Helper to parse the raw text from the flow
 const parseResponse = (responseText: string): { text: string; recipe?: Recipe } => {
   try {
-    // Attempt to parse the entire string as a direct JSON object (for recipes)
     const directJson = JSON.parse(responseText);
     const parsedRecipe = RecipeSchema.safeParse(directJson);
     if (parsedRecipe.success) {
-      // It's a valid recipe object directly.
       return { text: '', recipe: parsedRecipe.data };
     }
-    // It's some other JSON, maybe conversational output.
     if (directJson.output) {
       return { text: directJson.output };
     }
-  } catch (e) {
-    // Not a direct JSON object, so it might be a string with embedded JSON.
-  }
+  } catch (e) {}
 
-  // Fallback for string-based responses (like from n8n webhook-test)
   let processedText = responseText;
 
-  // Case 1: Response is an array like [{"output": "```json\n{...}\n```"}]
   try {
     const data = JSON.parse(responseText);
     if (Array.isArray(data) && data.length > 0 && data[0].output) {
       processedText = data[0].output;
     }
-  } catch (e) {
-    // Not a JSON array, proceed as plain text/JSON
-  }
+  } catch (e) {}
 
-  // Case 2: The text (processed or original) contains a JSON block
   const jsonMatch = processedText.match(/```json\n([\s\S]*?)\n```/);
   if (jsonMatch && jsonMatch[1]) {
     try {
       const parsedJson = JSON.parse(jsonMatch[1]);
       const parsedRecipe = RecipeSchema.safeParse(parsedJson);
       if (parsedRecipe.success) {
-        // Extract any text before the JSON block
         const textPart = processedText.substring(0, processedText.indexOf('```')).trim();
         return { text: textPart, recipe: parsedRecipe.data };
       }
     } catch (e) {
-      // The JSON block is invalid, return the whole text
       return { text: processedText };
     }
   }
 
-  // Case 3: The text is a simple JSON object (conversational output)
   try {
     const data = JSON.parse(responseText);
     if (data.output) {
       return { text: data.output };
     }
-  } catch(e) {
-    // Not a JSON, treat as plain text.
-  }
+  } catch(e) {}
 
-  // Case 4: Fallback for pure text
   return { text: responseText };
 };
 
 
 export default function ChefPage() {
   const auth = useAuth();
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading, userProfile, onProfileUpdate } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -116,18 +99,11 @@ export default function ChefPage() {
       return;
     }
 
-    let unsubProfile: Unsubscribe | undefined;
+    setLoading(!userProfile);
+
     let unsubMessages: Unsubscribe | undefined;
 
     if (firestore) {
-      const userRef = doc(firestore, 'users', user.uid);
-      unsubProfile = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          setUserProfile({ id: doc.id, ...doc.data() } as UserProfile);
-        }
-        setLoading(false);
-      });
-
       const messagesRef = collection(firestore, 'users', user.uid, 'chef_messages');
       const q = query(messagesRef, orderBy('createdAt', 'asc'));
       
@@ -145,19 +121,19 @@ export default function ChefPage() {
               path: `users/${'user.uid'}/chef_messages`,
           });
           errorEmitter.emit('permission-error', contextualError);
-          setMessages(defaultInitialMessages); // Fallback to initial messages on error
+          setMessages(defaultInitialMessages); 
       });
     }
 
     return () => {
-      if (unsubProfile) unsubProfile();
       if (unsubMessages) unsubMessages();
     };
-  }, [user, isUserLoading, router, firestore]);
+  }, [user, isUserLoading, router, firestore, userProfile]);
 
-  const handleProfileUpdate = useCallback((updatedProfile: Partial<UserProfile>) => {
-    setUserProfile(prevProfile => prevProfile ? { ...prevProfile, ...updatedProfile } : null);
-  }, []);
+  const handleProfileUpdateWithToast = useCallback(async (updatedProfile: Partial<UserProfile>) => {
+     await onProfileUpdate(updatedProfile);
+     toast({ title: 'Perfil Atualizado!', description: 'Suas informações foram salvas.' });
+  }, [onProfileUpdate, toast]);
 
   const saveMessage = async (message: Omit<Message, 'id' | 'createdAt'>) => {
       if (!user || !firestore) return;
@@ -261,8 +237,7 @@ export default function ChefPage() {
     <AppLayout
         user={user}
         userProfile={userProfile}
-        onMealAdded={() => {}}
-        onProfileUpdate={handleProfileUpdate}
+        onProfileUpdate={handleProfileUpdateWithToast}
     >
       <div className="flex flex-col h-full">
          <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 text-center relative">

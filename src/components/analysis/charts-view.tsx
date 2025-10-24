@@ -13,7 +13,7 @@ interface ChartsViewProps {
 export default function ChartsView({ caloriesData, hydrationData, weightData }: ChartsViewProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <Card className="shadow-sm rounded-2xl animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <Card className="shadow-sm rounded-2xl animate-fade-in lg:col-span-3">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-semibold text-lg">
             <TrendingUp className="h-5 w-5 text-primary" />
@@ -25,30 +25,30 @@ export default function ChartsView({ caloriesData, hydrationData, weightData }: 
           <DashboardCharts chartType="calories" data={caloriesData} />
         </CardContent>
       </Card>
-      <Card className="shadow-sm rounded-2xl animate-fade-in" style={{ animationDelay: '200ms' }}>
+      <Card className="shadow-sm rounded-2xl animate-fade-in lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-semibold text-lg">
+            <Weight className="h-5 w-5 text-primary" />
+            Acompanhamento de Peso
+          </CardTitle>
+          <CardDescription>Sua evolução de peso ao longo do período selecionado.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DashboardCharts chartType="weight" data={weightData} />
+        </CardContent>
+      </Card>
+       <Card className="shadow-sm rounded-2xl animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-semibold text-lg">
             <GlassWater className="h-5 w-5 text-primary" />
             Consumo de Água
           </CardTitle>
-          <CardDescription>Sua ingestão de água ao longo do período selecionado.</CardDescription>
+          <CardDescription>Sua ingestão de água diária.</CardDescription>
         </CardHeader>
         <CardContent>
           <DashboardCharts chartType="hydration" data={hydrationData} />
         </CardContent>
       </Card>
-      <Card className="shadow-sm rounded-2xl animate-fade-in" style={{ animationDelay: '300ms' }}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-semibold text-lg">
-              <Weight className="h-5 w-5 text-primary" />
-              Acompanhamento de Peso
-            </CardTitle>
-            <CardDescription>Sua evolução de peso ao longo do período selecionado.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DashboardCharts chartType="weight" data={weightData} />
-          </CardContent>
-        </Card>
     </div>
   );
 }

@@ -49,7 +49,7 @@ export default function SummaryCards({ totalNutrients, nutrientGoals, isAnalysis
 
   const summaryCardsData = [
     {
-      title: `${titlePrefix}Calorias`,
+      title: `${titlePrefix}de Calorias`,
       value: `${Math.round(totalNutrients.calorias).toLocaleString('pt-BR')}`,
       unit: 'kcal',
       icon: Flame,
@@ -57,7 +57,7 @@ export default function SummaryCards({ totalNutrients, nutrientGoals, isAnalysis
       goal: nutrientGoals?.calories,
     },
     {
-      title: `${titlePrefix}Proteínas`,
+      title: `${titlePrefix}de Proteínas`,
       value: `${(totalNutrients.proteinas || 0).toFixed(0)}`,
       unit: 'g',
       icon: Rocket,
@@ -65,14 +65,14 @@ export default function SummaryCards({ totalNutrients, nutrientGoals, isAnalysis
       goal: nutrientGoals?.protein
     },
     {
-      title: `${titlePrefix}Carboidratos`,
+      title: `${titlePrefix}de Carboidratos`,
       value: `${(totalNutrients.carboidratos || 0).toFixed(0)}`,
       unit: 'g',
       icon: FaHamburger,
       color: 'bg-yellow-400',
     },
     {
-      title: `${titlePrefix}Gorduras`,
+      title: `${titlePrefix}de Gorduras`,
       value: `${(totalNutrients.gorduras || 0).toFixed(0)}`,
       unit: 'g',
       icon: Donut,
@@ -80,10 +80,8 @@ export default function SummaryCards({ totalNutrients, nutrientGoals, isAnalysis
     }
   ];
 
-  const cardsToRender = isAnalysisPage ? summaryCardsData : summaryCardsData.slice(0, 2);
-
   return (
-    <div className={cn("grid gap-4", isAnalysisPage ? "grid-cols-2 md:grid-cols-4" : "grid-cols-1")}>
+    <div className={cn("grid gap-4", isAnalysisPage ? "grid-cols-2 md:grid-cols-4" : "grid-cols-1 sm:grid-cols-2")}>
       {summaryCardsData.map((card, index) => (
         <div key={card.title} className="animate-fade-in" style={{animationDelay: `${index * 100}ms`}}>
             <SummaryCard {...card} />
