@@ -13,51 +13,79 @@ interface TutorialGuideProps {
   onComplete: () => void;
 }
 
+const TUTORIAL_STORAGE_KEY = 'nutrismart_tutorial_step';
+
 export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuideProps) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [globalStepIndex, setGlobalStepIndex] = useState(0);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  const currentStep = tutorialSteps[currentStepIndex];
+  useEffect(() => {
+    try {
+      const savedStep = localStorage.getItem(TUTORIAL_STORAGE_KEY);
+      const initialStep = savedStep ? parseInt(savedStep, 10) : 0;
+      if (initialStep < tutorialSteps.length) {
+        setGlobalStepIndex(initialStep);
+      } else {
+        // Tutorial was already completed
+        handleComplete(true); // silent complete
+      }
+    } catch (error) {
+      // If localStorage is unavailable, just start from the beginning
+      setGlobalStepIndex(0);
+    }
+  }, []);
 
+  const currentPageSteps = tutorialSteps.filter(step => step.path === pathname);
+  const currentStep = tutorialSteps[globalStepIndex];
+  
   const findElement = useCallback(() => {
-    if (currentStep) {
+    if (currentStep && currentStep.path === pathname) {
       const element = document.getElementById(currentStep.elementId);
       setTargetElement(element);
     } else {
       setTargetElement(null);
     }
-  }, [currentStep]);
+  }, [currentStep, pathname]);
 
   useEffect(() => {
-    // A slight delay to ensure the DOM is fully rendered, especially on navigation.
-    const timeoutId = setTimeout(findElement, 100);
+    const timeoutId = setTimeout(findElement, 150);
     return () => clearTimeout(timeoutId);
-  }, [currentStepIndex, pathname, findElement]);
+  }, [globalStepIndex, pathname, findElement]);
+
+  const handleNext = () => {
+    const nextIndex = globalStepIndex + 1;
+    if (nextIndex >= tutorialSteps.length) {
+      handleComplete();
+    } else {
+      localStorage.setItem(TUTORIAL_STORAGE_KEY, String(nextIndex));
+      setGlobalStepIndex(nextIndex);
+
+      const nextStepInfo = tutorialSteps[nextIndex];
+      if (nextStepInfo.path && pathname !== nextStepInfo.path) {
+        router.push(nextStepInfo.path);
+      }
+    }
+  };
+
+  const handleComplete = (silently = false) => {
+    try {
+      localStorage.setItem(TUTORIAL_STORAGE_KEY, String(tutorialSteps.length));
+    } catch (error) {}
+    
+    setTargetElement(null);
+    setGlobalStepIndex(tutorialSteps.length);
+    if (!silently) {
+      onComplete();
+    }
+  };
 
   if (!isNewUser || !currentStep || !targetElement) {
     return null;
   }
-  
-  const isLastStep = currentStepIndex === tutorialSteps.length - 1;
 
-  const handleNext = () => {
-    if (isLastStep) {
-      handleComplete();
-    } else {
-      const nextStep = tutorialSteps[currentStepIndex + 1];
-      if (nextStep.path && pathname !== nextStep.path) {
-        router.push(nextStep.path);
-      }
-      setCurrentStepIndex(prev => prev + 1);
-    }
-  };
-
-  const handleComplete = () => {
-    onComplete();
-    setTargetElement(null);
-  };
+  const isLastStep = globalStepIndex === tutorialSteps.length - 1;
 
   return (
     <Popover open={true}>
@@ -88,12 +116,12 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
             <p className="text-sm text-muted-foreground">{currentStep.description}</p>
           </div>
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={handleComplete}>
+            <Button variant="ghost" size="sm" onClick={() => handleComplete()}>
               <X className="mr-1 h-4 w-4" />
               Pular
             </Button>
              <div className='text-xs text-muted-foreground'>
-                {currentStepIndex + 1} / {tutorialSteps.length}
+                {globalStepIndex + 1} / {tutorialSteps.length}
             </div>
             <Button size="sm" onClick={handleNext}>
               {isLastStep ? 'Finalizar' : 'Próximo'}
