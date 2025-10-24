@@ -94,17 +94,19 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
   if (!isNewUser || !currentStep || !targetElement) {
     return null;
   }
+  
+  const rect = targetElement.getBoundingClientRect();
 
   return (
     <Popover open={true}>
       <PopoverAnchor asChild>
         <div
           style={{
-            position: 'absolute',
-            top: `${targetElement.offsetTop}px`,
-            left: `${targetElement.offsetLeft}px`,
-            width: `${targetElement.offsetWidth}px`,
-            height: `${targetElement.offsetHeight}px`,
+            position: 'fixed',
+            top: `${rect.top}px`,
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
             pointerEvents: 'none',
             zIndex: 100,
           }}
