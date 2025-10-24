@@ -1,4 +1,3 @@
-
 // src/lib/tutorial-steps.ts
 import { PopoverProps } from '@radix-ui/react-popover';
 
@@ -23,7 +22,7 @@ export const tutorialSteps: TutorialStep[] = [
     elementId: 'summary-cards',
     title: '2. Acompanhe seus Nutrientes',
     description: 'Aqui você vê o resumo de calorias e macronutrientes consumidos no dia.',
-    side: 'right',
+    side: 'bottom',
     path: '/dashboard',
   },
   {
