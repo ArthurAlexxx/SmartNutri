@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getLocalDateString } from '@/lib/date-utils';
 import { useUser, useFirestore } from '@/firebase';
-import { query, collection, where, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { query, collection, where, onSnapshot, Unsubscribe, Timestamp } from 'firebase/firestore';
 import SummaryCards from '@/components/summary-cards';
 import ChartsView from '@/components/analysis/charts-view';
 import { generateAnalysisInsights } from '@/ai/flows/analysis-flow';
@@ -121,11 +121,36 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (periodMeals.length > 0 && userProfile) {
         setLoadingInsights(true);
+
+        // Sanitize data before sending to server action
+        const sanitizedProfile = {
+            calorieGoal: userProfile.calorieGoal,
+            proteinGoal: userProfile.proteinGoal,
+            waterGoal: userProfile.waterGoal,
+            weight: userProfile.weight,
+            targetWeight: userProfile.targetWeight,
+        };
+
+        const sanitizedMealEntries = periodMeals.map((e: MealEntry) => ({ 
+            date: e.date, 
+            totals: e.mealData.totais 
+        }));
+
+        const sanitizedHydrationEntries = periodHydration.map((e: HydrationEntry) => ({ 
+            date: e.date, 
+            intake: e.intake 
+        }));
+
+        const sanitizedWeightLogs = periodWeight.map((e: WeightLog) => ({ 
+            date: e.date, 
+            weight: e.weight 
+        }));
+
         generateAnalysisInsights({
-            profile: userProfile,
-            mealEntries: periodMeals,
-            hydrationEntries: periodHydration,
-            weightLogs: periodWeight,
+            profile: sanitizedProfile,
+            mealEntries: sanitizedMealEntries,
+            hydrationEntries: sanitizedHydrationEntries,
+            weightLogs: sanitizedWeightLogs,
         })
         .then(result => {
             setInsights(result.insights);

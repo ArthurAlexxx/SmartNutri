@@ -10,10 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { UserProfile } from '@/types/user';
-import type { MealEntry } from '@/types/meal';
-import type { HydrationEntry } from '@/types/hydration';
-import type { WeightLog } from '@/types/weight';
 
 const AnalysisInputSchema = z.object({
   profile: z.any().describe("O objeto de perfil do usuário, contendo metas como 'targetWeight'."),
@@ -91,27 +87,6 @@ const analysisFlow = ai.defineFlow(
 );
 
 export async function generateAnalysisInsights(input: AnalysisInput): Promise<AnalysisOutput> {
-    // Sanitize input data to prevent large objects from breaking the prompt
-    const sanitizedInput = {
-        profile: {
-            calorieGoal: input.profile.calorieGoal,
-            proteinGoal: input.profile.proteinGoal,
-            waterGoal: input.profile.waterGoal,
-            weight: input.profile.weight,
-            targetWeight: input.profile.targetWeight,
-        },
-        mealEntries: input.mealEntries.map((e: MealEntry) => ({ 
-            date: e.date, 
-            totals: e.mealData.totais 
-        })),
-        hydrationEntries: input.hydrationEntries.map((e: HydrationEntry) => ({ 
-            date: e.date, 
-            intake: e.intake 
-        })),
-        weightLogs: input.weightLogs.map((e: WeightLog) => ({ 
-            date: e.date, 
-            weight: e.weight 
-        })),
-    };
-    return analysisFlow(sanitizedInput);
+    // A sanitização agora é feita no lado do cliente antes de chamar esta função.
+    return analysisFlow(input);
 }
