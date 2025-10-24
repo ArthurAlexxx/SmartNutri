@@ -1,8 +1,7 @@
-
 // src/components/app-layout.tsx
 'use client';
 
-import React, { useState, useMemo, useEffect, useContext } from 'react';
+import React, { useState, useMemo, useEffect, useContext, createContext } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -20,6 +19,14 @@ import SubscriptionOverlay from './subscription-overlay';
 import { Skeleton } from './ui/skeleton';
 import { SiteConfigContext } from '@/context/site-config-context';
 import TutorialGuide from './tutorial-guide';
+
+// Context to control tutorial visibility
+const TutorialVisibilityContext = createContext({
+  isTutorialVisible: true,
+  setTutorialVisible: (visible: boolean) => {},
+});
+
+export const useTutorialVisibility = () => useContext(TutorialVisibilityContext);
 
 
 interface AppLayoutProps {
@@ -105,7 +112,8 @@ export default function AppLayout({ user, userProfile, onProfileUpdate, children
   const pathname = usePathname();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const siteConfig = useContext(SiteConfigContext);
-  
+  const [isTutorialVisible, setTutorialVisible] = useState(true);
+
   const isProfessional = userProfile?.profileType === 'professional';
   const isAdmin = isProfessional && userProfile?.role === 'admin';
   const isSuperAdmin = userProfile?.role === 'super-admin';
@@ -191,65 +199,67 @@ export default function AppLayout({ user, userProfile, onProfileUpdate, children
   }
 
   return (
-    <div className="grid h-screen w-full md:grid-cols-[260px_1fr]">
-      <div className="hidden border-r bg-sidebar-background md:block no-print">
-        <div className="flex h-full max-h-screen flex-col gap-2">
-          <div className="flex h-20 items-center border-b px-6">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} />
-            </Link>
-          </div>
-          <div className="flex-1 py-4 overflow-y-auto">
-            {renderNavLinks()}
+    <TutorialVisibilityContext.Provider value={{ isTutorialVisible, setTutorialVisible }}>
+      <div className="grid h-screen w-full md:grid-cols-[260px_1fr]">
+        <div className="hidden border-r bg-sidebar-background md:block no-print">
+          <div className="flex h-full max-h-screen flex-col gap-2">
+            <div className="flex h-20 items-center border-b px-6">
+              <Link href="/" className="flex items-center gap-2 font-semibold">
+                <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} />
+              </Link>
+            </div>
+            <div className="flex-1 py-4 overflow-y-auto">
+              {renderNavLinks()}
+            </div>
           </div>
         </div>
-      </div>
-      <div className="flex flex-col h-screen">
-        <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 px-4 sm:px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 no-print shrink-0">
-             <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="shrink-0 md:hidden"
-                    >
-                        <Menu className="h-5 w-5" />
-                        <span className="sr-only">Toggle navigation menu</span>
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="flex flex-col p-0 w-full max-w-sm">
-                    <SheetHeader className="flex h-20 items-center border-b px-6">
-                         <Link href="/" className="flex items-center gap-2 font-semibold">
-                           <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} />
-                        </Link>
-                         <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
-                    </SheetHeader>
-                    <div className="flex-1 overflow-y-auto">
-                         {renderNavLinks(true)}
-                    </div>
-                </SheetContent>
-            </Sheet>
-            
-            <div className="w-full flex-1 flex items-center justify-between">
-              {/* O título da página agora será definido dentro de cada página para usar a nova fonte */}
-            </div>
+        <div className="flex flex-col h-screen">
+          <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 px-4 sm:px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 no-print shrink-0">
+              <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+                  <SheetTrigger asChild>
+                      <Button
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0 md:hidden"
+                      >
+                          <Menu className="h-5 w-5" />
+                          <span className="sr-only">Toggle navigation menu</span>
+                      </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="flex flex-col p-0 w-full max-w-sm">
+                      <SheetHeader className="flex h-20 items-center border-b px-6">
+                          <Link href="/" className="flex items-center gap-2 font-semibold">
+                            <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} />
+                          </Link>
+                          <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
+                      </SheetHeader>
+                      <div className="flex-1 overflow-y-auto">
+                          {renderNavLinks(true)}
+                      </div>
+                  </SheetContent>
+              </Sheet>
+              
+              <div className="w-full flex-1 flex items-center justify-between">
+                {/* O título da página agora será definido dentro de cada página para usar a nova fonte */}
+              </div>
 
-            <DashboardHeader
-                user={user}
-                userProfile={userProfile}
-                onProfileUpdate={onProfileUpdate}
-            />
-        </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-muted/40 print:bg-white print:p-0 relative">
-          {hasAccess ? children : <SubscriptionOverlay />}
-          {userProfile && (
-             <TutorialGuide 
-                isNewUser={true} 
-                onComplete={() => onProfileUpdate({ isNewUser: false })}
-            />
-          )}
-        </main>
+              <DashboardHeader
+                  user={user}
+                  userProfile={userProfile}
+                  onProfileUpdate={onProfileUpdate}
+              />
+          </header>
+          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-muted/40 print:bg-white print:p-0 relative">
+            {hasAccess ? children : <SubscriptionOverlay />}
+            {userProfile && isTutorialVisible && (
+              <TutorialGuide 
+                  isNewUser={true} 
+                  onComplete={() => onProfileUpdate({ isNewUser: false })}
+              />
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </TutorialVisibilityContext.Provider>
   );
 }

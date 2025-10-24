@@ -42,10 +42,18 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
     );
     
     if (nextStepOnPage) {
-      setCurrentStep(nextStepOnPage);
-      // Attempt to find the element for the current step
-      const element = document.getElementById(nextStepOnPage.elementId);
-      setTargetElement(element);
+      // Use a short delay to allow the page to render and elements to become available
+      const timer = setTimeout(() => {
+        const element = document.getElementById(nextStepOnPage.elementId);
+        if (element) {
+          setCurrentStep(nextStepOnPage);
+          setTargetElement(element);
+        } else {
+          // If element not found, retry after a bit
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
     } else {
       // No more steps for this page, or no steps at all
       setCurrentStep(null);

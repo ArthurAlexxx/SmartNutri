@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { getLocalDateString } from '@/lib/date-utils';
 import { useUser, useFirestore } from '@/firebase';
 
-import AppLayout from '@/components/app-layout';
+import AppLayout, { useTutorialVisibility } from '@/components/app-layout';
 import EditMealModal from '@/components/edit-meal-modal';
 import { Button } from '@/components/ui/button';
 import WaterTrackerCard from '@/components/water-tracker-card';
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { user, userProfile, isUserLoading, onProfileUpdate } = useUser();
   const router = useRouter();
+  const { setTutorialVisible } = useTutorialVisibility();
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
   const [hydrationEntries, setHydrationEntries] = useState<HydrationEntry[]>([]);
@@ -41,6 +42,11 @@ export default function DashboardPage() {
   const [isAddMealModalOpen, setAddMealModalOpen] = useState(false);
   const [isWaterModalOpen, setWaterModalOpen] = useState(false);
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  useEffect(() => {
+    setTutorialVisible(!isAddMealModalOpen && !isWaterModalOpen && !isSettingsModalOpen && !editingMeal);
+  }, [isAddMealModalOpen, isWaterModalOpen, isSettingsModalOpen, editingMeal, setTutorialVisible]);
+
 
   useEffect(() => {
     if (isUserLoading) return;

@@ -189,7 +189,7 @@ export default function SettingsModal({ isOpen, onOpenChange, userProfile, userI
                         )}/>
                     </div>
                      <FormField control={form.control} name="targetDate" render={({ field }) => (
-                        <FormItem className='flex flex-col'>
+                        <FormItem className='flex flex-col py-1'>
                             <FormLabel>Data para Atingir a Meta</FormLabel>
                             <Popover>
                                 <PopoverTrigger asChild>
