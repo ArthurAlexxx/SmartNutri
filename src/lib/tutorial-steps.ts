@@ -1,3 +1,4 @@
+
 // src/lib/tutorial-steps.ts
 import { PopoverProps } from '@radix-ui/react-popover';
 
@@ -33,9 +34,9 @@ export const tutorialSteps: TutorialStep[] = [
     path: '/dashboard',
   },
   {
-    elementId: 'user-profile-button',
+    elementId: 'adjust-goals-button',
     title: '4. Ajuste suas Metas',
-    description: 'Clique no seu perfil para ajustar suas metas de calorias, peso e outras configurações a qualquer momento.',
+    description: 'Clique aqui para ajustar suas metas de calorias, peso e outras configurações a qualquer momento.',
     side: 'bottom',
     path: '/dashboard',
   },

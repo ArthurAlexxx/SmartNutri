@@ -8,7 +8,7 @@ import type { UserProfile } from '@/types/user';
 import type { HydrationEntry } from '@/types/hydration';
 import type { Room } from '@/types/room';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Share2, Donut } from 'lucide-react';
+import { Loader2, Plus, Share2, Donut, Settings } from 'lucide-react';
 import { collection, query, where, onSnapshot, deleteDoc, updateDoc, setDoc, Unsubscribe, doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { getLocalDateString } from '@/lib/date-utils';
@@ -23,6 +23,7 @@ import SummaryCards from '@/components/summary-cards';
 import ConsumedFoodsList from '@/components/consumed-foods-list';
 import AddMealModal from '@/app/add-meal-modal';
 import WaterTrackerModal from '@/components/water-tracker-modal';
+import SettingsModal from '@/components/settings-modal';
 
 
 export default function DashboardPage() {
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [editingMeal, setEditingMeal] = useState<MealEntry | null>(null);
   const [isAddMealModalOpen, setAddMealModalOpen] = useState(false);
   const [isWaterModalOpen, setWaterModalOpen] = useState(false);
+  const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
 
   useEffect(() => {
     if (isUserLoading) return;
@@ -197,14 +199,19 @@ export default function DashboardPage() {
                     <h2 className='text-3xl font-bold text-foreground font-heading'>Diário de Bordo</h2>
                     <p className='text-muted-foreground'>Registre suas refeições e consumo de água para hoje.</p>
                 </div>
+                 <Button id="adjust-goals-button" onClick={() => setSettingsModalOpen(true)} variant="outline" size="sm">
+                    <Settings className="mr-2 h-4 w-4" /> Ajustar Metas
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div id="summary-cards" className="lg:col-span-1 space-y-8 order-2 lg:order-1">
-                     <SummaryCards
-                        totalNutrients={totalNutrients}
-                        nutrientGoals={nutrientGoals}
-                    />
+                <div className="lg:col-span-1 space-y-8 order-2 lg:order-1">
+                     <div id="summary-cards">
+                        <SummaryCards
+                            totalNutrients={totalNutrients}
+                            nutrientGoals={nutrientGoals}
+                        />
+                    </div>
                     <div id="water-tracker-card">
                       <WaterTrackerCard
                           waterIntake={todayHydration?.intake || 0}
@@ -242,12 +249,21 @@ export default function DashboardPage() {
                 onMealUpdate={handleMealUpdate}
             />
         )}
-        {user && 
-          <AddMealModal 
-              isOpen={isAddMealModalOpen} 
-              onOpenChange={setAddMealModalOpen}
-              userId={user.uid} 
-          />
+        {user && userProfile &&
+          <>
+            <AddMealModal 
+                isOpen={isAddMealModalOpen} 
+                onOpenChange={setAddMealModalOpen}
+                userId={user.uid} 
+            />
+             <SettingsModal
+                isOpen={isSettingsModalOpen}
+                onOpenChange={setSettingsModalOpen}
+                userProfile={userProfile}
+                userId={user.uid}
+                onProfileUpdate={onProfileUpdate}
+            />
+          </>
         }
         <WaterTrackerModal
             isOpen={isWaterModalOpen}
