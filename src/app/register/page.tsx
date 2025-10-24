@@ -205,12 +205,12 @@ export default function RegisterPage() {
   return (
     <div className="w-full min-h-screen flex items-center justify-center p-4 relative">
         <Image
-            src="https://i.imgur.com/4w63DLG.jpg"
+            src="https://i.imgur.com/Q6gSmZm.png"
             alt="Fundo com prato de comida saudável"
             fill
             className="object-cover -z-10"
         />
-        <div className="absolute inset-0 bg-black/50 -z-10" />
+        <div className="absolute inset-0 bg-black/80 -z-10" />
 
         <Card className="w-full max-w-md shadow-2xl animate-fade-in bg-background/80 backdrop-blur-sm">
             <CardHeader className="text-center">
