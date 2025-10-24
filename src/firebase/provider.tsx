@@ -1,3 +1,4 @@
+
 // src/app/firebase/provider.tsx
 'use client';
 
