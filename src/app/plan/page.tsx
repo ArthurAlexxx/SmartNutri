@@ -1,4 +1,3 @@
-
 // src/app/plan/page.tsx
 'use client';
 
@@ -55,7 +54,7 @@ export default function PlanPage() {
             setRoom(null);
             setLoading(false);
         }
-    } else {
+    } else if (!isUserLoading) {
         // Profile is still loading or doesn't exist
         setLoading(isUserLoading);
     }
@@ -92,10 +91,12 @@ export default function PlanPage() {
 
   if (loading || isUserLoading) {
     return (
-      <div className="flex min-h-screen w-full flex-col bg-muted/40 items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Carregando seus planos...</p>
-      </div>
+        <AppLayout user={user} userProfile={userProfile} onProfileUpdate={onProfileUpdate}>
+            <div className="flex min-h-[calc(100vh-150px)] w-full flex-col bg-muted/40 items-center justify-center">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                <p className="mt-4 text-muted-foreground">Carregando seus planos...</p>
+            </div>
+      </AppLayout>
     );
   }
   
@@ -135,7 +136,7 @@ export default function PlanPage() {
             </div>
             
             <Tabs defaultValue="personal" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto">
                     <TabsTrigger value="personal">Meu Plano Pessoal / IA</TabsTrigger>
                     <TabsTrigger value="pro" disabled={!isUserWithProfessional}>Plano do Nutricionista</TabsTrigger>
                 </TabsList>
@@ -185,5 +186,3 @@ export default function PlanPage() {
     </AppLayout>
   );
 }
-
-    
