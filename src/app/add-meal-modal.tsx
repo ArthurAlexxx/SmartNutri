@@ -1,4 +1,4 @@
-// src/app/add-meal-modal.tsx
+// src/components/add-meal-modal.tsx
 'use client';
 
 import { useState } from 'react';
