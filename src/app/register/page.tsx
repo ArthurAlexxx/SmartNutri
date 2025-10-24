@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
@@ -52,7 +52,7 @@ const generateShareCode = () => {
 };
 
 const PasswordStrengthMeter = ({ password }: { password?: string }) => {
-    const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
+    const [strength, setStrength] = React.useState({ score: 0, label: '', color: '' });
 
     const checkStrength = (pass: string) => {
         let score = 0;
@@ -79,7 +79,7 @@ const PasswordStrengthMeter = ({ password }: { password?: string }) => {
         setStrength({ score, label, color });
     };
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (password) {
             checkStrength(password);
         } else {
@@ -203,103 +203,85 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-       <div className="relative hidden lg:flex flex-col p-10 text-white">
-            <Image
-                src="https://i.imgur.com/4w63DLG.jpg"
-                alt="Fundo com prato de comida saudável"
-                fill
-                className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50" />
+    <div className="w-full min-h-screen flex items-center justify-center p-4 relative">
+        <Image
+            src="https://i.imgur.com/4w63DLG.jpg"
+            alt="Fundo com prato de comida saudável"
+            fill
+            className="object-cover -z-10"
+        />
+        <div className="absolute inset-0 bg-black/50 -z-10" />
 
-            <div className="relative z-20 flex items-center text-lg font-medium text-white bg-white/10 backdrop-blur-sm p-2 rounded-xl w-fit">
-                {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
-            </div>
-          
-            <div className="relative z-20 mt-auto max-w-md">
-                <blockquote className="space-y-2">
-                <p className="text-lg">
-                    &ldquo;Cuidar da sua saúde hoje dá mais vida ao seu futuro. Cada escolha conta.&rdquo;
-                </p>
-                <footer className="text-sm opacity-80">Equipe NutriSmart</footer>
-                </blockquote>
-            </div>
-        </div>
-        <div className="flex items-center justify-center py-12 px-4 sm:px-0">
-            <Card className="w-full max-w-md shadow-2xl animate-fade-in relative mx-auto">
-                <Link href="/" className="absolute top-4 left-4">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-                    </Button>
-                </Link>
-                <CardHeader className="text-center pt-16">
+        <Card className="w-full max-w-md shadow-2xl animate-fade-in bg-background/80 backdrop-blur-sm">
+            <CardHeader className="text-center">
+                <div className="mx-auto mb-4">
+                    {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
+                </div>
                 <CardTitle className="text-3xl font-bold font-heading">Crie sua Conta</CardTitle>
                 <CardDescription>Comece sua jornada para uma vida mais saudável hoje mesmo.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
-                    <FormField
-                        control={form.control}
-                        name="fullName"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Nome Completo</FormLabel>
-                            <FormControl><Input placeholder="Seu nome" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>E-mail</FormLabel>
-                            <FormControl><Input placeholder="seu@email.com" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Senha</FormLabel>
-                            <FormControl><Input type="password" placeholder="Mínimo 6 caracteres" {...field} /></FormControl>
-                            <PasswordStrengthMeter password={watchedPassword} />
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Confirmar Senha</FormLabel>
-                            <FormControl><Input type="password" placeholder="Confirme sua senha" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <Button type="submit" className="w-full !mt-6" disabled={loading}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Criar Conta
-                    </Button>
-                    </form>
-                </Form>
-                <div className="mt-6 text-center text-sm">
-                    Já tem uma conta?{' '}
-                    <Link href="/login" className="font-semibold text-primary hover:underline">
-                    Faça login
-                    </Link>
-                </div>
-                </CardContent>
-            </Card>
-        </div>
+            </CardHeader>
+            <CardContent>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
+                <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Nome Completo</FormLabel>
+                        <FormControl><Input placeholder="Seu nome" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>E-mail</FormLabel>
+                        <FormControl><Input placeholder="seu@email.com" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Senha</FormLabel>
+                        <FormControl><Input type="password" placeholder="Mínimo 6 caracteres" {...field} /></FormControl>
+                        <PasswordStrengthMeter password={watchedPassword} />
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Confirmar Senha</FormLabel>
+                        <FormControl><Input type="password" placeholder="Confirme sua senha" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit" className="w-full !mt-6" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Criar Conta
+                </Button>
+                </form>
+            </Form>
+            <div className="mt-6 text-center text-sm">
+                Já tem uma conta?{' '}
+                <Link href="/login" className="font-semibold text-primary hover:underline">
+                Faça login
+                </Link>
+            </div>
+            </CardContent>
+        </Card>
     </div>
   );
 }

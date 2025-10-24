@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { SiteConfigContext } from '@/context/site-config-context';
@@ -69,92 +69,74 @@ export default function LoginPage() {
   };
 
   return (
-     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-        <div className="relative hidden lg:flex flex-col p-10 text-white">
-            <Image
-                src="https://i.imgur.com/4w63DLG.jpg"
-                alt="Fundo com prato de comida saudável"
-                fill
-                className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50" />
-
-            <div className="relative z-20 flex items-center text-lg font-medium text-white bg-white/10 backdrop-blur-sm p-2 rounded-xl w-fit">
-                {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
-            </div>
-          
-            <div className="relative z-20 mt-auto max-w-md">
-                <blockquote className="space-y-2">
-                <p className="text-lg">
-                    &ldquo;Cuidar da sua saúde hoje dá mais vida ao seu futuro. Cada escolha conta.&rdquo;
-                </p>
-                <footer className="text-sm opacity-80">Equipe NutriSmart</footer>
-                </blockquote>
-            </div>
-        </div>
-        <div className="flex items-center justify-center py-12 px-4 sm:px-0">
-             <Card className="w-full max-w-md shadow-2xl animate-fade-in relative mx-auto">
-                <Link href="/" className="absolute top-4 left-4">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-                    </Button>
-                </Link>
-                <CardHeader className="text-center pt-16">
+     <div className="w-full min-h-screen flex items-center justify-center p-4 relative">
+        <Image
+            src="https://i.imgur.com/4w63DLG.jpg"
+            alt="Fundo com prato de comida saudável"
+            fill
+            className="object-cover -z-10"
+        />
+        <div className="absolute inset-0 bg-black/50 -z-10" />
+        
+        <Card className="w-full max-w-md shadow-2xl animate-fade-in bg-background/80 backdrop-blur-sm">
+            <CardHeader className="text-center">
+                <div className="mx-auto mb-4">
+                    {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
+                </div>
                 <CardTitle className="text-3xl font-bold font-heading">Bem-vindo de volta!</CardTitle>
                 <CardDescription>Faça login para continuar sua jornada saudável.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
-                    <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>E-mail</FormLabel>
-                            <FormControl>
-                            <Input placeholder="seu@email.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                        <FormItem>
-                            <div className="flex justify-between">
-                                <FormLabel>Senha</FormLabel>
-                                <Link
-                                    href="/forgot-password"
-                                    className="ml-auto inline-block text-xs text-primary underline"
-                                >
-                                    Esqueceu a senha?
-                                </Link>
-                            </div>
-                            <FormControl>
-                            <Input type="password" placeholder="Sua senha" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Entrar
-                    </Button>
-                    </form>
-                </Form>
-                <div className="mt-6 text-center text-sm">
-                    Não tem uma conta?{' '}
-                    <Link href="/register" className="font-semibold text-primary hover:underline">
-                    Cadastre-se
-                    </Link>
-                </div>
-                </CardContent>
-            </Card>
-        </div>
+            </CardHeader>
+            <CardContent>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>E-mail</FormLabel>
+                        <FormControl>
+                        <Input placeholder="seu@email.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                    <FormItem>
+                        <div className="flex justify-between">
+                            <FormLabel>Senha</FormLabel>
+                            <Link
+                                href="/forgot-password"
+                                className="ml-auto inline-block text-xs text-primary underline"
+                            >
+                                Esqueceu a senha?
+                            </Link>
+                        </div>
+                        <FormControl>
+                        <Input type="password" placeholder="Sua senha" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Entrar
+                </Button>
+                </form>
+            </Form>
+            <div className="mt-6 text-center text-sm">
+                Não tem uma conta?{' '}
+                <Link href="/register" className="font-semibold text-primary hover:underline">
+                Cadastre-se
+                </Link>
+            </div>
+            </CardContent>
+        </Card>
     </div>
   );
 }

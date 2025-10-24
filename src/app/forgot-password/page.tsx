@@ -58,92 +58,74 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-       <div className="relative hidden lg:flex flex-col p-10 text-white">
-            <Image
-                src="https://i.imgur.com/4w63DLG.jpg"
-                alt="Fundo com prato de comida saudável"
-                fill
-                className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50" />
-
-            <div className="relative z-20 flex items-center text-lg font-medium text-white bg-white/10 backdrop-blur-sm p-2 rounded-xl w-fit">
-                {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
-            </div>
-          
-            <div className="relative z-20 mt-auto max-w-md">
-                <blockquote className="space-y-2">
-                <p className="text-lg">
-                    &ldquo;Cuidar da sua saúde hoje dá mais vida ao seu futuro. Cada escolha conta.&rdquo;
-                </p>
-                <footer className="text-sm opacity-80">Equipe NutriSmart</footer>
-                </blockquote>
-            </div>
-        </div>
-        <div className="flex items-center justify-center py-12 px-4 sm:px-0">
-             <Card className="w-full max-w-md shadow-2xl animate-fade-in relative mx-auto">
-                <Link href="/" className="absolute top-4 left-4">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-                    </Button>
-                </Link>
-                <CardHeader className="text-center pt-16">
-                    <CardTitle className="text-3xl font-bold font-heading">Redefinir Senha</CardTitle>
-                    <CardDescription>
-                        {submitted 
-                        ? 'Verifique sua caixa de entrada.'
-                        : 'Insira seu e-mail para receber um link de redefinição.'
-                        }
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                {submitted ? (
-                    <div className="text-center space-y-4">
-                        <p className="text-muted-foreground">
-                            Se uma conta com este e-mail existir, um link para redefinir sua senha foi enviado. O link expira em alguns minutos.
-                        </p>
-                        <Button asChild>
-                            <Link href="/login">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Voltar para o Login
-                            </Link>
-                        </Button>
-                    </div>
-                ) : (
-                    <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handlePasswordReset)} className="space-y-6">
-                        <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>E-mail</FormLabel>
-                            <FormControl>
-                                <Input placeholder="seu@email.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <Button type="submit" className="w-full" disabled={loading}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Enviar Link de Redefinição
-                        </Button>
-                    </form>
-                    </Form>
-                )}
-                {!submitted && (
-                    <div className="mt-6 text-center text-sm">
-                        Lembrou a senha?{' '}
-                        <Link href="/login" className="font-semibold text-primary hover:underline">
-                            Faça login
+    <div className="w-full min-h-screen flex items-center justify-center p-4 relative">
+        <Image
+            src="https://i.imgur.com/4w63DLG.jpg"
+            alt="Fundo com prato de comida saudável"
+            fill
+            className="object-cover -z-10"
+        />
+        <div className="absolute inset-0 bg-black/50 -z-10" />
+        
+        <Card className="w-full max-w-md shadow-2xl animate-fade-in bg-background/80 backdrop-blur-sm">
+            <CardHeader className="text-center">
+                <div className="mx-auto mb-4">
+                    {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
+                </div>
+                <CardTitle className="text-3xl font-bold font-heading">Redefinir Senha</CardTitle>
+                <CardDescription>
+                    {submitted 
+                    ? 'Verifique sua caixa de entrada.'
+                    : 'Insira seu e-mail para receber um link de redefinição.'
+                    }
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+            {submitted ? (
+                <div className="text-center space-y-4">
+                    <p className="text-muted-foreground">
+                        Se uma conta com este e-mail existir, um link para redefinir sua senha foi enviado. O link expira em alguns minutos.
+                    </p>
+                    <Button asChild>
+                        <Link href="/login">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Voltar para o Login
                         </Link>
-                    </div>
-                )}
-                </CardContent>
-            </Card>
-        </div>
+                    </Button>
+                </div>
+            ) : (
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(handlePasswordReset)} className="space-y-6">
+                    <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>E-mail</FormLabel>
+                        <FormControl>
+                            <Input placeholder="seu@email.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Enviar Link de Redefinição
+                    </Button>
+                </form>
+                </Form>
+            )}
+            {!submitted && (
+                <div className="mt-6 text-center text-sm">
+                    Lembrou a senha?{' '}
+                    <Link href="/login" className="font-semibold text-primary hover:underline">
+                        Faça login
+                    </Link>
+                </div>
+            )}
+            </CardContent>
+        </Card>
     </div>
   );
 }
