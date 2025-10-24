@@ -26,9 +26,9 @@
     --ring: var(--primary);
     --radius: 0.8rem;
     --chart-1: 140 70% 50%;
-    --chart-2: 0 84.2% 60.2%;
+    --chart-2: 212 100% 66%;
     --chart-3: 30 96% 76%;
-    --chart-4: 212 100% 66%;
+    --chart-4: 0 84.2% 60.2%;
     --chart-5: 22.8 90.1% 48.4%;
 
     --sidebar-background: 0 0% 100%;
@@ -63,9 +63,9 @@
     --ring: var(--primary);
 
     --chart-1: 140 70% 50%;
-    --chart-2: 0 84.2% 60.2%;
+    --chart-2: 212 100% 76%;
     --chart-3: 30 96% 76%;
-    --chart-4: 212 100% 76%;
+    --chart-4: 0 84.2% 60.2%;
     --chart-5: 22.8 90.1% 48.4%;
 
     --sidebar-background: 222.2 84% 4.9%;
