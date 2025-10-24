@@ -1,4 +1,3 @@
-
 // src/lib/tutorial-steps.ts
 import { PopoverProps } from '@radix-ui/react-popover';
 
