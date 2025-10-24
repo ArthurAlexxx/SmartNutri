@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 'use client';
 
@@ -20,7 +21,7 @@ import WaterTrackerCard from '@/components/water-tracker-card';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import SummaryCards from '@/components/summary-cards';
 import ConsumedFoodsList from '@/components/consumed-foods-list';
-import AddMealModal from '@/components/add-meal-modal';
+import AddMealModal from '@/app/add-meal-modal';
 import WaterTrackerModal from '@/components/water-tracker-modal';
 
 
@@ -199,16 +200,18 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-1 space-y-8 order-2 lg:order-1">
+                <div id="summary-cards" className="lg:col-span-1 space-y-8 order-2 lg:order-1">
                      <SummaryCards
                         totalNutrients={totalNutrients}
                         nutrientGoals={nutrientGoals}
                     />
-                    <WaterTrackerCard
-                        waterIntake={todayHydration?.intake || 0}
-                        waterGoal={waterGoal}
-                        onAddWaterClick={() => setWaterModalOpen(true)}
-                    />
+                    <div id="water-tracker-card">
+                      <WaterTrackerCard
+                          waterIntake={todayHydration?.intake || 0}
+                          waterGoal={waterGoal}
+                          onAddWaterClick={() => setWaterModalOpen(true)}
+                      />
+                    </div>
                 </div>
                 <div className="lg:col-span-2 space-y-8 order-1 lg:order-2">
                     <Card className="shadow-sm rounded-2xl w-full">
