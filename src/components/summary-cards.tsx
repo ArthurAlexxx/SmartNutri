@@ -22,8 +22,8 @@ interface SummaryCardsProps {
 
 const SummaryCard = ({ title, value, unit, icon: Icon, color, goal }: { title: string, value: string, unit: string, icon: React.ElementType, color: string, goal?: number | null }) => {
     return (
-        <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl bg-card">
-            <CardContent className="p-4 flex items-center gap-4">
+        <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl bg-card flex flex-col h-full">
+            <CardContent className="p-4 flex items-center gap-4 flex-grow">
                 <div className={cn("p-3 rounded-lg", color)}>
                     <Icon className="h-6 w-6 text-white" />
                 </div>
@@ -33,9 +33,11 @@ const SummaryCard = ({ title, value, unit, icon: Icon, color, goal }: { title: s
                         <p className="text-2xl font-bold">{value}</p>
                         <p className="text-sm text-muted-foreground">{unit}</p>
                     </div>
-                     {goal != null && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3"/> Meta: {goal.toLocaleString('pt-BR')} {unit}</p>
-                    )}
+                     <div className='h-4'>
+                        {goal != null && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3"/> Meta: {goal.toLocaleString('pt-BR')} {unit}</p>
+                        )}
+                     </div>
                 </div>
             </CardContent>
         </Card>
