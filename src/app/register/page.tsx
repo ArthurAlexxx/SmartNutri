@@ -223,8 +223,8 @@ export default function RegisterPage() {
     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
        <div className="relative hidden flex-col justify-between bg-muted p-10 text-white lg:flex dark:border-r">
           <Image
-            src="https://images.unsplash.com/photo-1576091160323-838b816a1b63?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="Profissional de saúde usando um tablet"
+            src="https://i.imgur.com/Q6gSmZm.png"
+            alt="Visão geral do aplicativo NutriSmart"
             fill
             className="object-cover"
             />
