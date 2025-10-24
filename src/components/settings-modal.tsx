@@ -9,28 +9,23 @@ import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Save, Share2, Copy, UserCog, CreditCard, ArrowRight, CalendarIcon, Phone } from 'lucide-react';
+import { Loader2, Save, Target, Weight, CalendarIcon, Flame, Droplet, Rocket } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { type UserProfile } from '@/types/user';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Separator } from './ui/separator';
 import { doc, updateDoc, runTransaction, addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import Link from 'next/link';
-import { Badge } from './ui/badge';
-import { getLocalDateString } from '@/lib/date-utils';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
+import { getLocalDateString } from '@/lib/date-utils';
 
 const formSchema = z.object({
-  age: z.coerce.number().min(1, 'A idade deve ser maior que 0.').optional().or(z.literal(NaN)),
   weight: z.coerce.number().min(1, 'O peso deve ser maior que 0.').optional().or(z.literal(NaN)),
   targetWeight: z.coerce.number().min(1, 'A meta de peso deve ser maior que 0.').optional().or(z.literal(NaN)),
   targetDate: z.date().optional(),
-  whatsappPhoneNumber: z.string().optional(),
   calorieGoal: z.coerce.number().min(1, 'A meta de calorias deve ser maior que 0.'),
   proteinGoal: z.coerce.number().min(1, 'A meta de proteínas deve ser maior que 0.'),
   waterGoal: z.coerce.number().min(1, 'A meta de água deve ser maior que 0.'),
@@ -56,18 +51,16 @@ export default function SettingsModal({ isOpen, onOpenChange, userProfile, userI
       calorieGoal: 2000,
       proteinGoal: 140,
       waterGoal: 2000,
-      age: NaN,
       weight: NaN,
       targetWeight: NaN,
       targetDate: undefined,
-      whatsappPhoneNumber: '',
     },
   });
   
   const { isSubmitting, isDirty } = form.formState;
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && userProfile) {
       const targetDate = userProfile.targetDate;
       let finalDate: Date | undefined;
       if (targetDate) {
@@ -82,31 +75,24 @@ export default function SettingsModal({ isOpen, onOpenChange, userProfile, userI
         calorieGoal: userProfile.calorieGoal ?? 2000,
         proteinGoal: userProfile.proteinGoal ?? 140,
         waterGoal: userProfile.waterGoal ?? 2000,
-        age: userProfile.age ?? NaN,
         weight: userProfile.weight ?? NaN,
         targetWeight: userProfile.targetWeight ?? NaN,
         targetDate: finalDate,
-        whatsappPhoneNumber: userProfile.whatsappPhoneNumber ?? '',
       });
     }
   }, [userProfile, form, isOpen]);
   
-    const watchedCalorieGoal = form.watch('calorieGoal');
+  const watchedCalorieGoal = form.watch('calorieGoal');
 
-    useEffect(() => {
-        if (watchedCalorieGoal > 0) {
-            const newProteinGoal = Math.round((watchedCalorieGoal * 0.35) / 4);
-            form.setValue('proteinGoal', newProteinGoal, { shouldDirty: true });
-        }
-    }, [watchedCalorieGoal, form]);
+  useEffect(() => {
+      if (watchedCalorieGoal > 0 && form.formState.dirtyFields.calorieGoal) {
+          const newProteinGoal = Math.round((watchedCalorieGoal * 0.35) / 4);
+          form.setValue('proteinGoal', newProteinGoal, { shouldDirty: true });
+      }
+  }, [watchedCalorieGoal, form]);
 
   const onSubmit = async (data: SettingsFormValues) => {
-    if (!firestore) {
-        toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao banco de dados.' });
-        return;
-    }
-
-    if (!isDirty) {
+    if (!firestore || !isDirty) {
         onOpenChange(false);
         return;
     }
@@ -120,12 +106,9 @@ export default function SettingsModal({ isOpen, onOpenChange, userProfile, userI
             if (dirtyFields.calorieGoal) updatedProfile.calorieGoal = data.calorieGoal;
             if (dirtyFields.proteinGoal) updatedProfile.proteinGoal = data.proteinGoal;
             if (dirtyFields.waterGoal) updatedProfile.waterGoal = data.waterGoal;
-            if (dirtyFields.age && data.age && !isNaN(data.age)) updatedProfile.age = data.age;
             if (dirtyFields.weight && data.weight && !isNaN(data.weight)) updatedProfile.weight = data.weight;
             if (dirtyFields.targetWeight && data.targetWeight && !isNaN(data.targetWeight)) updatedProfile.targetWeight = data.targetWeight;
             if (dirtyFields.targetDate && data.targetDate) updatedProfile.targetDate = Timestamp.fromDate(data.targetDate);
-            if (dirtyFields.whatsappPhoneNumber) updatedProfile.whatsappPhoneNumber = data.whatsappPhoneNumber;
-
 
             // 1. Update the user's profile
             transaction.update(userRef, updatedProfile);
@@ -141,14 +124,10 @@ export default function SettingsModal({ isOpen, onOpenChange, userProfile, userI
                 };
                 transaction.set(weightLogRef, newLog);
             }
-
-            // 3. If the user is in a room, update the patientInfo in the room document
-            if (userProfile.patientRoomId && (dirtyFields.age || dirtyFields.weight)) {
+             // 3. If the user is in a room, update the patientInfo in the room document
+            if (userProfile.patientRoomId && (dirtyFields.weight)) {
                 const roomRef = doc(firestore, 'rooms', userProfile.patientRoomId);
                 const updatedPatientInfo: { [key: string]: any } = {};
-                if (dirtyFields.age && updatedProfile.age) {
-                    updatedPatientInfo['patientInfo.age'] = updatedProfile.age;
-                }
                 if (dirtyFields.weight && updatedProfile.weight) {
                     updatedPatientInfo['patientInfo.weight'] = updatedProfile.weight;
                 }
@@ -157,23 +136,21 @@ export default function SettingsModal({ isOpen, onOpenChange, userProfile, userI
                     transaction.update(roomRef, updatedPatientInfo);
                 }
             }
-
             return updatedProfile;
         });
         
-        const locallyUpdatedProfile = {...userProfile, ...data};
-        onProfileUpdate(locallyUpdatedProfile);
+        onProfileUpdate(data);
 
         toast({
-            title: 'Configurações Salvas',
-            description: 'Suas informações foram atualizadas com sucesso.',
+            title: 'Metas Salvas',
+            description: 'Suas metas foram atualizadas com sucesso.',
         });
 
     } catch (error) {
-        console.error("Error updating profile:", error);
+        console.error("Error updating goals:", error);
         toast({
             title: 'Erro ao Salvar',
-            description: 'Não foi possível atualizar suas configurações.',
+            description: 'Não foi possível atualizar suas metas.',
             variant: 'destructive',
         });
     } finally {
@@ -185,100 +162,87 @@ export default function SettingsModal({ isOpen, onOpenChange, userProfile, userI
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Configurações e Metas</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">Ajustar Metas e Peso</DialogTitle>
           <DialogDescription>
-            Personalize seus dados e metas diárias para uma experiência mais precisa.
+            Atualize seu peso e suas metas diárias para uma experiência mais precisa.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="max-h-[60vh] -mx-6 px-6">
                 <div className="space-y-6 pt-4">
-                    <h4 className='font-semibold text-foreground'>Dados Pessoais</h4>
+                    <h4 className='font-semibold text-foreground flex items-center gap-2'><Weight className='h-5 w-5' /> Acompanhamento de Peso</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField control={form.control} name="age" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Idade</FormLabel>
-                                <FormControl><Input type="number" placeholder="Sua idade" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} value={isNaN(field.value) ? '' : field.value} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}/>
                         <FormField control={form.control} name="weight" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Peso (kg)</FormLabel>
-                                <FormControl><Input type="number" step="0.1" placeholder="Seu peso" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} value={isNaN(field.value) ? '' : field.value} /></FormControl>
+                                <FormLabel>Peso Atual (kg)</FormLabel>
+                                <FormControl><Input type="number" step="0.1" placeholder="Seu peso atual" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} value={isNaN(field.value) ? '' : field.value} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}/>
-                    </div>
-                     <Separator className="my-6" />
-                    <h4 className='font-semibold text-foreground'>Metas de Saúde</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField control={form.control} name="targetWeight" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Peso Meta (kg)</FormLabel>
-                                <FormControl><Input type="number" step="0.1" placeholder="Ex: 75" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} value={isNaN(field.value) ? '' : field.value} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}/>
-                        <FormField control={form.control} name="targetDate" render={({ field }) => (
-                            <FormItem className='flex flex-col'>
-                                <FormLabel>Data Meta</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                            "pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                            )}
-                                        >
-                                            {field.value ? (
-                                            format(field.value, "PPP", { locale: ptBR })
-                                            ) : (
-                                            <span>Escolha uma data</span>
-                                            )}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={field.onChange}
-                                            disabled={(date) =>
-                                                date < new Date() || date < new Date("1900-01-01")
-                                            }
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
+                                <FormControl><Input type="number" step="0.1" placeholder="Seu peso desejado" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} value={isNaN(field.value) ? '' : field.value} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}/>
                     </div>
-                     <Separator className="my-6" />
-                    <h4 className='font-semibold text-foreground'>Metas Diárias</h4>
+                     <FormField control={form.control} name="targetDate" render={({ field }) => (
+                        <FormItem className='flex flex-col'>
+                            <FormLabel>Data para Atingir a Meta</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                        "pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                        )}
+                                    >
+                                        {field.value ? (
+                                        format(field.value, "PPP", { locale: ptBR })
+                                        ) : (
+                                        <span>Escolha uma data</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) => date < new Date() || date < new Date("1900-01-01")}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                    
+                    <h4 className='font-semibold text-foreground pt-4 flex items-center gap-2'><Target className='h-5 w-5' /> Metas Diárias</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <FormField control={form.control} name="calorieGoal" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Calorias (kcal)</FormLabel>
+                                <FormLabel className='flex items-center gap-1.5'><Flame className='h-4 w-4 text-orange-500'/>Calorias (kcal)</FormLabel>
                                 <FormControl><Input type="number" placeholder="Ex: 2200" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}/>
                         <FormField control={form.control} name="proteinGoal" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Proteínas (g)</FormLabel>
+                                <FormLabel className='flex items-center gap-1.5'><Rocket className='h-4 w-4 text-blue-500'/>Proteínas (g)</FormLabel>
                                 <FormControl><Input type="number" placeholder="Ex: 150" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}/>
                         <FormField control={form.control} name="waterGoal" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Água (ml)</FormLabel>
+                                <FormLabel className='flex items-center gap-1.5'><Droplet className='h-4 w-4 text-sky-500'/>Água (ml)</FormLabel>
                                 <FormControl><Input type="number" placeholder="Ex: 2000" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>

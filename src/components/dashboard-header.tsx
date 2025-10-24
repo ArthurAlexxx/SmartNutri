@@ -3,7 +3,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, LogOut, User as UserIcon, Settings, Bell } from 'lucide-react';
+import { Plus, LogOut, User as UserIcon, Settings, Bell, Share2, CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { MealData } from '@/types/meal';
@@ -13,6 +13,8 @@ import SettingsModal from './settings-modal';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+import ShareCodeModal from './share-code-modal';
 
 interface DashboardHeaderProps {
   user: User | null;
@@ -23,7 +25,11 @@ interface DashboardHeaderProps {
 export default function DashboardHeader({ user, userProfile, onProfileUpdate }: DashboardHeaderProps) {
   const router = useRouter();
   const auth = useAuth();
+  const { toast } = useToast();
+
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [isShareModalOpen, setShareModalOpen] = useState(false);
+
 
   const handleSignOut = async () => {
     try {
@@ -33,6 +39,16 @@ export default function DashboardHeader({ user, userProfile, onProfileUpdate }: 
       console.error("Error signing out: ", error);
     }
   };
+
+  const handleCopyShareCode = () => {
+    if (!userProfile?.dashboardShareCode) return;
+    navigator.clipboard.writeText(userProfile.dashboardShareCode);
+    toast({
+      title: 'Código Copiado!',
+      description: 'Seu código de compartilhamento foi copiado.',
+    });
+  };
+
 
   const userId = user?.uid;
   const userName = userProfile?.fullName || user?.displayName || 'Visitante';
@@ -59,12 +75,13 @@ export default function DashboardHeader({ user, userProfile, onProfileUpdate }: 
                     <p className='text-xs font-normal text-muted-foreground'>{userEmail}</p>
                 </DropdownMenuLabel>
               <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                    onClick={() => userProfile && setSettingsModalOpen(true)}
-                    disabled={!userProfile}
-                >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Configurações</span>
+                <DropdownMenuItem onClick={() => setShareModalOpen(true)} disabled={!userProfile}>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    <span>Compartilhar com Nutri</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => router.push('/pricing')}>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>Gerenciar Assinatura</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-500 focus:text-red-500 focus:bg-red-50/80">
@@ -83,6 +100,14 @@ export default function DashboardHeader({ user, userProfile, onProfileUpdate }: 
             userId={userId}
             onProfileUpdate={onProfileUpdate}
          />
+      )}
+
+      {userProfile?.dashboardShareCode && (
+        <ShareCodeModal 
+            isOpen={isShareModalOpen}
+            onOpenChange={setShareModalOpen}
+            shareCode={userProfile.dashboardShareCode}
+        />
       )}
     </>
   );
