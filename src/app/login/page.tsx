@@ -70,25 +70,29 @@ export default function LoginPage() {
 
   return (
      <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-        <div className="relative hidden flex-col justify-between bg-muted p-10 text-white lg:flex dark:border-r">
-           <Image
-            src="https://i.imgur.com/Q6gSmZm.png"
-            alt="Visão geral do aplicativo NutriSmart"
-            fill
-            className="object-cover"
-            />
-            <div className="absolute inset-0 bg-primary/90" />
-          <div className="relative z-20 flex items-center text-lg font-medium text-white">
-            {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
-          </div>
-          <div className="relative z-20 mt-auto max-w-md">
-            <blockquote className="space-y-2">
-              <p className="text-lg text-primary-foreground/90">
-                &ldquo;Cuidar da sua saúde hoje dá mais vida ao seu futuro. Cada escolha conta.&rdquo;
-              </p>
-              <footer className="text-sm text-primary-foreground/80">Equipe NutriSmart</footer>
-            </blockquote>
-          </div>
+        <div className="relative hidden flex-col justify-between bg-primary p-10 text-white lg:flex dark:border-r">
+            <div className="relative z-20 flex items-center text-lg font-medium text-white bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
+            </div>
+            
+            <div className="relative z-10 my-auto mx-auto w-full max-w-md animate-fade-in" style={{animationDelay: '150ms'}}>
+                <Image
+                    src="https://i.imgur.com/Q6gSmZm.png"
+                    alt="Visão geral do aplicativo NutriSmart"
+                    width={800}
+                    height={600}
+                    className="rounded-3xl object-cover shadow-2xl"
+                />
+            </div>
+          
+            <div className="relative z-20 mt-auto max-w-md">
+                <blockquote className="space-y-2">
+                <p className="text-lg text-primary-foreground/90">
+                    &ldquo;Cuidar da sua saúde hoje dá mais vida ao seu futuro. Cada escolha conta.&rdquo;
+                </p>
+                <footer className="text-sm text-primary-foreground/80">Equipe NutriSmart</footer>
+                </blockquote>
+            </div>
         </div>
         <div className="flex items-center justify-center py-12 px-4 sm:px-0">
              <Card className="w-full max-w-md shadow-2xl animate-fade-in relative mx-auto">
