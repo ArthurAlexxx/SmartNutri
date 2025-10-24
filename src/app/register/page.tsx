@@ -88,6 +88,7 @@ export default function RegisterPage() {
             email: values.email,
             profileType: 'patient',
             createdAt: serverTimestamp() as Timestamp,
+            isNewUser: true, // Set flag for tutorial
             dashboardShareCode: generateShareCode(),
             calorieGoal: 2000,
             waterGoal: 2000,

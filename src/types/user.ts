@@ -18,19 +18,6 @@ export interface ActivePlan {
     createdAt: Timestamp;
 }
 
-export interface Subscription {
-    id: string;
-    userId: string;
-    status: 'trialing' | 'active' | 'past_due' | 'canceled';
-    stripeCustomerId: string;
-    stripeSubscriptionId: string;
-    currentPeriodEnd: Timestamp;
-}
-
-export interface ProfessionalDetails {
-    specialty?: string;
-}
-
 export interface UserProfile {
     id: string;
     tenantId: string; // The tenant this user belongs to
@@ -39,6 +26,7 @@ export interface UserProfile {
     profileType: 'patient' | 'professional';
     role?: 'super-admin' | 'admin' | 'professional'; // 'super-admin' for platform owner, 'admin' for tenant owner, 'professional' for others
     createdAt: Timestamp;
+    isNewUser?: boolean; // Flag for first-time tutorial
     
     // Subscription details for independent patients
     subscriptionStatus?: 'trial' | 'active' | 'inactive';
@@ -46,7 +34,7 @@ export interface UserProfile {
     trialEndsAt?: Timestamp;
 
     // Professional fields
-    professionalDetails?: ProfessionalDetails;
+    professionalDetails?: any;
     professionalRoomIds?: string[];
     
     // Patient fields

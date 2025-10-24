@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx
 'use client';
 
@@ -217,7 +216,7 @@ export default function DashboardPage() {
                             <div className='flex-1'>
                                 <CardTitle>Refeições de Hoje</CardTitle>
                             </div>
-                            <Button onClick={() => setAddMealModalOpen(true)} size="sm" className="w-full sm:w-auto">
+                            <Button id="add-meal-button" onClick={() => setAddMealModalOpen(true)} size="sm" className="w-full sm:w-auto">
                                 <Plus className="mr-2 h-4 w-4" /> Adicionar Refeição
                             </Button>
                        </CardHeader>

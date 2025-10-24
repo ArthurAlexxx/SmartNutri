@@ -18,6 +18,7 @@ import { logoFonts } from '@/lib/site-config-schema';
 import SubscriptionOverlay from './subscription-overlay';
 import { Skeleton } from './ui/skeleton';
 import { SiteConfigContext } from '@/context/site-config-context';
+import TutorialGuide from './tutorial-guide';
 
 
 interface AppLayoutProps {
@@ -28,11 +29,11 @@ interface AppLayoutProps {
 }
 
 const navItemsPatient = [
-  { href: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard, premium: false },
-  { href: '/analysis', label: 'Análise', icon: BarChart3, premium: true },
-  { href: '/plan', label: 'Plano Alimentar', icon: BookMarked, premium: true },
-  { href: '/chef', label: 'Chef Virtual', icon: ChefHat, premium: true },
-  { href: '/history', label: 'Histórico', icon: History, premium: false },
+  { href: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard, premium: false, id: 'nav-dashboard' },
+  { href: '/analysis', label: 'Análise', icon: BarChart3, premium: true, id: 'nav-analysis' },
+  { href: '/plan', label: 'Plano Alimentar', icon: BookMarked, premium: true, id: 'nav-plan' },
+  { href: '/chef', label: 'Chef Virtual', icon: ChefHat, premium: true, id: 'nav-chef' },
+  { href: '/history', label: 'Histórico', icon: History, premium: false, id: 'nav-history' },
 ];
 
 const navItemsProfessional = [
@@ -52,11 +53,12 @@ const navItemsSuperAdmin = [
 ];
 
 
-const NavLink = ({ href, label, icon: Icon, pathname, onClick }: { href: string; label: string; icon: React.ElementType; pathname: string; onClick?: () => void }) => {
+const NavLink = ({ id, href, label, icon: Icon, pathname, onClick }: { id?: string; href: string; label: string; icon: React.ElementType; pathname: string; onClick?: () => void }) => {
   const isActive = pathname === href || (href !== '/dashboard' && href !== '/pro/dashboard' && pathname.startsWith(href));
 
   return (
     <Link
+      id={id}
       href={href}
       onClick={onClick}
       className={cn(
@@ -239,6 +241,12 @@ export default function AppLayout({ user, userProfile, onProfileUpdate, children
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-muted/40 print:bg-white print:p-0 relative">
           {hasAccess ? children : <SubscriptionOverlay />}
+          {userProfile?.isNewUser && pathname === '/dashboard' && (
+             <TutorialGuide 
+                isNewUser={userProfile.isNewUser} 
+                onComplete={() => onProfileUpdate({ isNewUser: false })}
+            />
+          )}
         </main>
       </div>
     </div>
