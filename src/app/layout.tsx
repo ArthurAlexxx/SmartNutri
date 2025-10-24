@@ -5,6 +5,8 @@ import { Poppins, Lexend, Playfair_Display, Roboto_Slab, Montserrat, Lato, Merri
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import AppProvider from './app-provider';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -88,18 +90,28 @@ export const viewport: Viewport = {
   themeColor: '#72A159',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
+interface RootLayoutProps {
   children: React.ReactNode;
-}>) {
+  params: {
+    locale: string;
+  };
+}
+
+export default async function RootLayout({
+  children,
+  params: { locale }
+}: Readonly<RootLayoutProps>) {
+  const messages = await getMessages();
+  
   return (
-    <html lang="pt-BR" className={`${poppins.variable} ${lexend.variable} ${playfairDisplay.variable} ${robotoSlab.variable} ${montserrat.variable} ${lato.variable} ${merriweather.variable} ${oswald.variable} ${lobster.variable} ${pacifico.variable} ${dancingScript.variable} ${caveat.variable} !scroll-smooth`}>
+    <html lang={locale} className={`${poppins.variable} ${lexend.variable} ${playfairDisplay.variable} ${robotoSlab.variable} ${montserrat.variable} ${lato.variable} ${merriweather.variable} ${oswald.variable} ${lobster.variable} ${pacifico.variable} ${dancingScript.variable} ${caveat.variable} !scroll-smooth`}>
       <body>
-        <AppProvider>
-          {children}
-        </AppProvider>
-        <Toaster />
+        <NextIntlClientProvider messages={messages}>
+          <AppProvider>
+            {children}
+          </AppProvider>
+          <Toaster />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

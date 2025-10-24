@@ -1,5 +1,4 @@
-
-// src/app/pricing/page.tsx
+// src/app/[locale]/pricing/page.tsx
 'use client';
 
 import { Check } from 'lucide-react';

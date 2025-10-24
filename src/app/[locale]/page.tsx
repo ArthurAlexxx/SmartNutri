@@ -1,5 +1,4 @@
-
-// src/app/page.tsx
+// src/app/[locale]/page.tsx
 'use client';
 
 import React, { useContext } from 'react';

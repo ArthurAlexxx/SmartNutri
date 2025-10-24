@@ -1,3 +1,4 @@
+
 // src/app/[locale]/login/page.tsx
 'use client';
 
