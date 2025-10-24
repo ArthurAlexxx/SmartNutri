@@ -1,7 +1,8 @@
+
 // src/app/login/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,7 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '@/firebase';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { SiteConfigContext } from '@/context/site-config-context';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LogoDisplay } from '@/components/logo-display';
 
 const formSchema = z.object({
   email: z.string().email('E-mail inválido.'),
@@ -30,6 +33,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const auth = useAuth();
+  const siteConfig = useContext(SiteConfigContext);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
@@ -66,68 +70,90 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md shadow-2xl animate-fade-in relative">
-         <Link href="/" className="absolute top-4 left-4">
-            <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-            </Button>
-        </Link>
-        <CardHeader className="text-center pt-16">
-          <CardTitle className="text-3xl font-bold font-heading">Bem-vindo de volta!</CardTitle>
-          <CardDescription>Faça login para continuar sua jornada saudável.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input placeholder="seu@email.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between">
-                        <FormLabel>Senha</FormLabel>
-                        <Link
-                            href="/forgot-password"
-                            className="ml-auto inline-block text-xs text-primary underline"
-                        >
-                            Esqueceu a senha?
-                        </Link>
-                    </div>
-                    <FormControl>
-                      <Input type="password" placeholder="Sua senha" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Entrar
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-6 text-center text-sm">
-            Não tem uma conta?{' '}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
-              Cadastre-se
-            </Link>
+     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
+        <div className="relative hidden flex-col items-center justify-between bg-muted p-10 text-white lg:flex dark:border-r">
+          <div className="absolute inset-0 bg-primary/80" />
+           <Image
+            src="https://images.unsplash.com/photo-1576091160323-838b816a1b63?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            alt="Profissional de saúde usando um tablet"
+            fill
+            className="object-cover -z-10"
+            />
+          <div className="relative z-20 flex items-center text-lg font-medium">
+            {siteConfig ? <LogoDisplay logo={siteConfig.logo} siteName={siteConfig.siteName} /> : <Skeleton className="h-8 w-32" />}
           </div>
-        </CardContent>
-      </Card>
+          <div className="relative z-20 mt-auto max-w-md">
+            <blockquote className="space-y-2 bg-black/50 p-4 rounded-lg backdrop-blur-sm">
+              <p className="text-lg">
+                &ldquo;Cuidar da sua saúde hoje dá mais vida ao seu futuro. Cada escolha conta.&rdquo;
+              </p>
+              <footer className="text-sm">Equipe NutriSmart</footer>
+            </blockquote>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-12 px-4 sm:px-0">
+             <Card className="w-full max-w-md shadow-2xl animate-fade-in relative mx-auto">
+                <Link href="/" className="absolute top-4 left-4">
+                    <Button variant="ghost" size="icon">
+                        <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                </Link>
+                <CardHeader className="text-center pt-16">
+                <CardTitle className="text-3xl font-bold font-heading">Bem-vindo de volta!</CardTitle>
+                <CardDescription>Faça login para continuar sua jornada saudável.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>E-mail</FormLabel>
+                            <FormControl>
+                            <Input placeholder="seu@email.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                        <FormItem>
+                            <div className="flex justify-between">
+                                <FormLabel>Senha</FormLabel>
+                                <Link
+                                    href="/forgot-password"
+                                    className="ml-auto inline-block text-xs text-primary underline"
+                                >
+                                    Esqueceu a senha?
+                                </Link>
+                            </div>
+                            <FormControl>
+                            <Input type="password" placeholder="Sua senha" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Entrar
+                    </Button>
+                    </form>
+                </Form>
+                <div className="mt-6 text-center text-sm">
+                    Não tem uma conta?{' '}
+                    <Link href="/register" className="font-semibold text-primary hover:underline">
+                    Cadastre-se
+                    </Link>
+                </div>
+                </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }
