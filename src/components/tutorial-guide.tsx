@@ -46,6 +46,10 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
     if (isLastStep) {
       handleComplete();
     } else {
+      const nextStep = tutorialSteps[currentStepIndex + 1];
+      if (nextStep.path && pathname !== nextStep.path) {
+        router.push(nextStep.path);
+      }
       setCurrentStepIndex(prev => prev + 1);
     }
   };
@@ -65,14 +69,17 @@ export default function TutorialGuide({ isNewUser, onComplete }: TutorialGuidePr
             left: `${targetElement.offsetLeft}px`,
             width: `${targetElement.offsetWidth}px`,
             height: `${targetElement.offsetHeight}px`,
+            pointerEvents: 'none',
+            zIndex: 100,
           }}
+          className='rounded-md ring-4 ring-primary/50 ring-offset-4 ring-offset-background animate-pulse duration-1000'
         />
       </PopoverAnchor>
       <PopoverContent
         side={currentStep.side}
         align="center"
-        sideOffset={10}
-        className="w-72 shadow-2xl animate-in fade-in-0 zoom-in-95"
+        sideOffset={15}
+        className="w-72 shadow-2xl animate-in fade-in-0 zoom-in-95 z-[101]"
         onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus stealing
       >
         <div className="space-y-4">
